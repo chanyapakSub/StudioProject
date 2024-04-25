@@ -37,6 +37,7 @@ void Update_qei(QEI* qei, TIM_HandleTypeDef* htim){
 	qei -> pps = (float)qei -> diff_counter_value * (float)qei -> freq;
 	qei -> radps = qei -> pps * 2.0 * M_PI / (float)(qei -> ppr);
 	qei -> rpm = qei -> pps * 60.0 / (float)(qei -> ppr) ;
+	qei -> mmps = qei -> pps * 16.0 / (float)(qei -> ppr);
 	// Update position at difference unit
 	qei -> pulse += qei -> diff_counter_value;
 	qei -> rad += (float)qei -> diff_counter_value * 2.0 * M_PI / (float)(qei -> ppr);

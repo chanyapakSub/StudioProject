@@ -24,6 +24,7 @@ typedef struct{
 	float pps; // POSITION AT PULSE UNIT
 	float rpm; // POSITION AT PULSE UNIT
 	float radps; // POSITION AT PULSE UNIT
+	float mmps; // POSITION AT MILLIMETER UNIT
 } QEI;
 enum{
 	NEW,OLD
