@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "arm_math.h"
+#include "pid.h"
 #include "qei.h"
 #include "pwm.h"
 #include "adc.h"
@@ -54,6 +55,7 @@ TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 int32_t test = 0;
+float32_t setpoint = 0;
 //Current sensor
 ADC current_sensor;
 
@@ -63,8 +65,20 @@ int16_t pwm_signal = 0;
 // QEI variables
 QEI encoder;
 
-//Microsecond function
-uint64_t _micros = 0;
+// Torque pid
+//PID t_pid;
+
+// Velocity pid
+PID v_pid;
+
+// Positiob pid
+PID p_pid;
+float32_t p_kp = 2;
+float32_t p_ki = 0;
+float32_t p_kd = 0;
+float32_t p_e = 0;
+int32_t p_output = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,7 +93,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 void Update_torque_control();
 void Update_velocity_control();
-void Update_position_control();
+void Update_position_control(float32_t s);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -135,7 +149,10 @@ int main(void)
   QEI_init(&encoder, 8192, 2000, 65536);
 
   //Current reader
-  ADC_init(&hadc1, current_sensor);
+  ADC_init(&hadc1, &current_sensor);
+
+  //Position PID
+  PID_init(&p_pid, p_kp, p_ki, p_kd, 0.0008);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -413,7 +430,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 169;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 499;
+  htim3.Init.Period = 99;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -593,8 +610,14 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim3){
 		Update_qei(&encoder, &htim4);
-		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, pwm_signal);
 		Update_adc(&current_sensor);
+
+		static uint64_t timestamp = 0;
+		if (timestamp == 8){
+			Update_position_control(setpoint);
+			timestamp = 0;
+		}
+		timestamp++;
 	}
 }
 // GPIO interrupt
@@ -612,8 +635,10 @@ void Update_velocity_control(){
 
 }
 // Position control update
-void Update_position_control(){
-
+void Update_position_control(float32_t s){
+	p_e = s - Get_mm(&encoder);
+	p_output = Update_pid(&p_pid, p_e, 900, 1000);
+	Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, p_output);
 }
 /* USER CODE END 4 */
 

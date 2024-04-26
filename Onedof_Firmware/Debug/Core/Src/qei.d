@@ -1,5 +1,38 @@
-Core/Src/qei.o: ../Core/Src/qei.c ../Core/Inc/qei.h ../Core/Inc/main.h \
- ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
+Core/Src/qei.o: ../Core/Src/qei.c ../Core/Inc/qei.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h \
+ ../Drivers/CMSIS/Include/cmsis_compiler.h \
+ ../Drivers/CMSIS/Include/cmsis_gcc.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_memory.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/none.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/utils.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/basic_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_memory.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/none.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/utils.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/interpolation_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/bayes_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/statistics_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/basic_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/fast_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/matrix_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/complex_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/statistics_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/controller_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/support_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/distance_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/matrix_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/svm_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/svm_defines.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/fast_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/transform_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/complex_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/filtering_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/support_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/quaternion_math_functions.h \
+ ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/window_functions.h \
+ ../Core/Inc/main.h ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
  ../Core/Inc/stm32g4xx_hal_conf.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_def.h \
@@ -8,7 +41,6 @@ Core/Src/qei.o: ../Core/Src/qei.c ../Core/Inc/qei.h ../Core/Inc/main.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
  ../Drivers/CMSIS/Include/cmsis_version.h \
  ../Drivers/CMSIS/Include/cmsis_compiler.h \
- ../Drivers/CMSIS/Include/cmsis_gcc.h \
  ../Drivers/CMSIS/Include/mpu_armv7.h \
  ../Drivers/CMSIS/Device/ST/STM32G4xx/Include/system_stm32g4xx.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
@@ -32,6 +64,39 @@ Core/Src/qei.o: ../Core/Src/qei.c ../Core/Inc/qei.h ../Core/Inc/main.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart_ex.h
 ../Core/Inc/qei.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h:
+../Drivers/CMSIS/Include/cmsis_compiler.h:
+../Drivers/CMSIS/Include/cmsis_gcc.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_memory.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/none.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/utils.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/basic_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_memory.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/none.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/utils.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/interpolation_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/bayes_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/statistics_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/basic_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/fast_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/matrix_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/complex_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/statistics_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/controller_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/support_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/distance_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/matrix_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/svm_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/svm_defines.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/fast_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/transform_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/complex_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/filtering_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/support_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/quaternion_math_functions.h:
+../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/window_functions.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h:
 ../Core/Inc/stm32g4xx_hal_conf.h:
@@ -42,7 +107,6 @@ Core/Src/qei.o: ../Core/Src/qei.c ../Core/Inc/qei.h ../Core/Inc/main.h \
 ../Drivers/CMSIS/Include/core_cm4.h:
 ../Drivers/CMSIS/Include/cmsis_version.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
-../Drivers/CMSIS/Include/cmsis_gcc.h:
 ../Drivers/CMSIS/Include/mpu_armv7.h:
 ../Drivers/CMSIS/Device/ST/STM32G4xx/Include/system_stm32g4xx.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:

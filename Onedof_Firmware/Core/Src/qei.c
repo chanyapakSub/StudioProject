@@ -14,11 +14,13 @@ void QEI_init(QEI* qei, int32_t ppr, int32_t freq, int32_t period){
 	qei -> counter_value[OLD] = 0;
 	qei -> diff_counter_value = 0;
 	qei -> pulse = 0;
-	qei -> rad = 0;
-	qei -> rev = 0;
-	qei -> pps = 0;
-	qei -> rpm = 0;
-	qei -> radps =0;
+	qei -> rad = 0.0;
+	qei -> rev = 0.0;
+	qei -> mm = 0.0;
+	qei -> pps = 0.0;
+	qei -> rpm = 0.0;
+	qei -> radps = 0.0;
+	qei -> mmps = 0.0;
 }
 
 void Update_qei(QEI* qei, TIM_HandleTypeDef* htim){
@@ -42,6 +44,7 @@ void Update_qei(QEI* qei, TIM_HandleTypeDef* htim){
 	qei -> pulse += qei -> diff_counter_value;
 	qei -> rad += (float)qei -> diff_counter_value * 2.0 * M_PI / (float)(qei -> ppr);
 	qei -> rev += (float)qei -> diff_counter_value / (float)(qei -> ppr);
+	qei -> mm += (float)qei -> diff_counter_value * 16.0 / (float)(qei -> ppr); // for lead 16 mm.
 	// Update acceleration at difference
 
 	// Update OLD value
@@ -61,3 +64,9 @@ void Reset_qei(QEI* qei){
 	qei -> radps =0;
 }
 
+float32_t Get_mmps(QEI* qei){
+	return qei -> mmps;
+}
+float32_t Get_mm(QEI* qei){
+	return qei -> mm;
+}

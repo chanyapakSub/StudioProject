@@ -11,8 +11,8 @@
 #include "main.h"
 
 typedef struct{
-	uint32_t adc_buffer[50];
-	uint32_t adc_avg;
+	uint32_t adc_buffer[50]; //ADC BUFFER FOR COLLECT ADC DATA
+	uint32_t adc_avg; //AVERAGE ADC DATA
 } ADC;
 
 void ADC_init(ADC_HandleTypeDef* hadc, ADC* adc);
