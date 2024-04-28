@@ -23,7 +23,7 @@ typedef struct{
 	float32_t rev; // POSITION AT REVOLUTION UNIT
 	float32_t rad; // POSITION AT RADIANT UNIT
 	float32_t mm; // POSITION AT MILLIMETER UNIT
-	float32_t pps; // POSITION AT PULSE UNIT
+	float64_t pps; // POSITION AT PULSE UNIT
 	float32_t rpm; // POSITION AT PULSE UNIT
 	float32_t radps; // POSITION AT PULSE UNIT
 	float32_t mmps; // POSITION AT MILLIMETER UNIT

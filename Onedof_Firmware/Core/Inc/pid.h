@@ -17,9 +17,11 @@ typedef struct{
 	float32_t ki; //I GAIN FOR PID
 	float32_t kd; //D GAIN FOR PID
 	float32_t sampt; //SAMPLING TIME
+	float64_t y_n; //Initial output
 
 } PID;
 
 void PID_init(PID* pid, float32_t _kp,  float32_t _ki, float32_t _kd, float32_t _sampt);
-int32_t Update_pid(PID *pid, float32_t error, int32_t pid_sat, int32_t plant_sat);
+int32_t Update_pid(PID *pid, float32_t error, float32_t pid_sat, float32_t plant_sat);
+void Reset_pid(PID* pid);
 #endif /* INC_PID_H_ */

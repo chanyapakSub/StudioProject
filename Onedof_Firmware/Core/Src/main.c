@@ -26,6 +26,7 @@
 #include "qei.h"
 #include "pwm.h"
 #include "adc.h"
+#include "joy.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +57,18 @@ TIM_HandleTypeDef htim4;
 /* USER CODE BEGIN PV */
 int32_t test = 0;
 float32_t setpoint = 0;
-//Current sensor
+
+// Joy
+JOY joy;
+int32_t jog = 0;
+
+// Homing
+uint8_t is_home = 0;
+
+// Modes selection
+uint8_t mode = 0; // 0 = base system control, 1 = joy control, 2 = emergency or initial
+
+// Current sensor
 ADC current_sensor;
 
 // Update_motor variables
@@ -70,6 +82,11 @@ QEI encoder;
 
 // Velocity pid
 PID v_pid;
+float32_t v_kp = 3;
+float32_t v_ki = 0;
+float32_t v_kd = 0;
+float32_t v_e = 0;
+int32_t v_output = 0; // for tuning only int32_t
 
 // Positiob pid
 PID p_pid;
@@ -77,7 +94,7 @@ float32_t p_kp = 2;
 float32_t p_ki = 0;
 float32_t p_kd = 0;
 float32_t p_e = 0;
-int32_t p_output = 0;
+int32_t p_output = 0; // for tuning only int32_t
 
 /* USER CODE END PV */
 
@@ -91,8 +108,8 @@ static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
-void Update_torque_control();
-void Update_velocity_control();
+void Update_torque_control(float32_t s);
+void Update_velocity_control(float32_t s);
 void Update_position_control(float32_t s);
 /* USER CODE END PFP */
 
@@ -146,13 +163,14 @@ int main(void)
 
   //Encoder reader
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
-  QEI_init(&encoder, 8192, 2000, 65536);
+  QEI_init(&encoder, 8192, 8000, 65536);
 
   //Current reader
   ADC_init(&hadc1, &current_sensor);
 
   //Position PID
-  PID_init(&p_pid, p_kp, p_ki, p_kd, 0.0008);
+  PID_init(&p_pid, p_kp, p_ki, p_kd, 0.001);
+  PID_init(&v_pid, v_kp, v_ki, v_kd, 0.000125);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -162,7 +180,22 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	Update_qei(&encoder);
+	  while(mode == 1){
+		  Update_joy(&joy);
+		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
+			  // switch 1 has pushed
+			  jog += 10; // Move up 10 mm.
+		  }else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
+			  // switch 2 has pushed
+			  jog -= 10; // Move down 10 mm.
+		  }else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
+			  // switch 3 has pushed
+			  mode = 0; // Change mode to Automatic
+		  }else if (joy.s_1 && joy.s_2 && joy.s_3 && !joy.s_4){
+			  // switch 4 has pushed
+			  // save data for base system
+		  }
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -538,7 +571,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Direaction_motor_GPIO_Port, Direaction_motor_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, Direaction_motor_Pin|Emergency_light_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LD2_Pin|Solenoid_valve_push_Pin, GPIO_PIN_RESET);
@@ -566,8 +599,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : joy_switch_3_Pin joy_switch_4_Pin Reed_switch_pull_Pin */
-  GPIO_InitStruct.Pin = joy_switch_3_Pin|joy_switch_4_Pin|Reed_switch_pull_Pin;
+  /*Configure GPIO pins : joy_switch_3_Pin joy_switch_4_Pin Set_home_Pin Reed_switch_pull_Pin */
+  GPIO_InitStruct.Pin = joy_switch_3_Pin|joy_switch_4_Pin|Set_home_Pin|Reed_switch_pull_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -584,6 +617,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Emergency_light_Pin */
+  GPIO_InitStruct.Pin = Emergency_light_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Emergency_light_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Reed_switch_push_Pin joy_switch_2_Pin */
   GPIO_InitStruct.Pin = Reed_switch_push_Pin|joy_switch_2_Pin;
@@ -611,34 +651,85 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim3){
 		Update_qei(&encoder, &htim4);
 		Update_adc(&current_sensor);
-
-		static uint64_t timestamp = 0;
-		if (timestamp == 8){
-			Update_position_control(setpoint);
-			timestamp = 0;
+		if(encoder.mm > 500 || encoder.mm < 0){
+			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 		}
-		timestamp++;
+		else if(mode == 0 || mode == 1){
+			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, v_output);
+			if(mode == 0){ setpoint = 0;} // If mode == 0 : set point from base system
+			else if(mode == 1){setpoint = 1;} // If mode == 1 : set point from joy
+			Update_velocity_control(test);
+			static uint64_t timestamp = 0;
+			if (timestamp == 8){
+//				Update_position_control(test);
+				timestamp = 0;
+			}
+			timestamp++;
+		}
+		else{
+			// Stop motor if emergency
+			if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
+				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+			}
+			else if (!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
+				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);
+				if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)){
+					// Set home
+					Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, -400);
+				}
+			}
+		}
 	}
 }
 // GPIO interrupt
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	if(GPIO_Pin == GPIO_PIN_13){
-		Reset_qei(&encoder);
+
+	if(GPIO_Pin == GPIO_PIN_15){
+		// Emergency switch interrupted
+		// Stop motor
+		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+		// Emergency light enable
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);
+//		mode = 2;
+	}
+	if(GPIO_Pin == GPIO_PIN_12){
+		// Proximity interrupted
+		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+		is_home = 1;
+		uint8_t stop = 1;
+		while(stop){
+			Update_joy(&joy);
+			if(!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
+				// mode 0 selected by push switch 1
+				mode = 0;
+				is_home = 0;
+				stop = 0;
+			}
+			else if(joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
+				// mode 1 selected by push switch 2
+//				mode = 1;
+				is_home = 0;
+				stop = 0;
+			}
+		}
 	}
 }
 // Torque control update
-void Update_torque_control(){
+void Update_torque_control(float32_t s){
 
 }
 // Velocity control update
-void Update_velocity_control(){
-
+void Update_velocity_control(float32_t s){
+	//input is pulse unit
+	v_e = s - Get_mmps(&encoder);
+	v_output = Update_pid(&v_pid, v_e, 900.0, 1000.0);
 }
 // Position control update
 void Update_position_control(float32_t s){
+	//input is pulse unit
 	p_e = s - Get_mm(&encoder);
-	p_output = Update_pid(&p_pid, p_e, 900, 1000);
-	Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, p_output);
+	p_output = Update_pid(&p_pid, p_e, 900.0, 1000.0);
 }
 /* USER CODE END 4 */
 

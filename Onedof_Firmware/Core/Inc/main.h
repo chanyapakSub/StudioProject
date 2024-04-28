@@ -90,8 +90,12 @@ void Error_Handler(void);
 #define Emergency_switch_Pin GPIO_PIN_15
 #define Emergency_switch_GPIO_Port GPIOB
 #define Emergency_switch_EXTI_IRQn EXTI15_10_IRQn
+#define Set_home_Pin GPIO_PIN_6
+#define Set_home_GPIO_Port GPIOC
 #define Reed_switch_pull_Pin GPIO_PIN_7
 #define Reed_switch_pull_GPIO_Port GPIOC
+#define Emergency_light_Pin GPIO_PIN_8
+#define Emergency_light_GPIO_Port GPIOC
 #define Solenoid_valve_push_Pin GPIO_PIN_8
 #define Solenoid_valve_push_GPIO_Port GPIOA
 #define Reed_switch_push_Pin GPIO_PIN_9
