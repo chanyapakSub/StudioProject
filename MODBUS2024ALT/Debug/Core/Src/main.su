@@ -1,0 +1,17 @@
+../Core/Src/main.c:100:5:main	8	static
+../Core/Src/main.c:175:6:SystemClock_Config	88	static
+../Core/Src/main.c:222:13:MX_TIM3_Init	40	static
+../Core/Src/main.c:267:13:MX_TIM16_Init	8	static
+../Core/Src/main.c:303:13:MX_USART2_UART_Init	8	static
+../Core/Src/main.c:349:13:MX_DMA_Init	16	static
+../Core/Src/main.c:371:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:410:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/main.c:418:6:Vacuum_Status	4	static
+../Core/Src/main.c:429:6:Gripper_Movement_Status	4	static
+../Core/Src/main.c:439:6:Set_Shelves	4	static
+../Core/Src/main.c:458:6:Set_Goal_Point	8	static
+../Core/Src/main.c:464:6:Run_Point_Mode	4	static
+../Core/Src/main.c:472:6:Set_Home	4	static
+../Core/Src/main.c:483:6:SetPick_PlaceOrder	4	static
+../Core/Src/main.c:529:6:Run_Jog_Mode	24	static
+../Core/Src/main.c:553:6:Error_Handler	4	static,ignoring_inline_asm

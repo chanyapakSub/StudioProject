@@ -1,0 +1,17 @@
+../Core/Src/main.c:100:5:main	1
+../Core/Src/main.c:175:6:SystemClock_Config	3
+../Core/Src/main.c:222:13:MX_TIM3_Init	4
+../Core/Src/main.c:267:13:MX_TIM16_Init	3
+../Core/Src/main.c:303:13:MX_USART2_UART_Init	5
+../Core/Src/main.c:349:13:MX_DMA_Init	1
+../Core/Src/main.c:371:13:MX_GPIO_Init	1
+../Core/Src/main.c:410:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:418:6:Vacuum_Status	3
+../Core/Src/main.c:429:6:Gripper_Movement_Status	3
+../Core/Src/main.c:439:6:Set_Shelves	3
+../Core/Src/main.c:458:6:Set_Goal_Point	2
+../Core/Src/main.c:464:6:Run_Point_Mode	2
+../Core/Src/main.c:472:6:Set_Home	2
+../Core/Src/main.c:483:6:SetPick_PlaceOrder	3
+../Core/Src/main.c:529:6:Run_Jog_Mode	3
+../Core/Src/main.c:553:6:Error_Handler	1
