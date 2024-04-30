@@ -55,6 +55,8 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
+uint64_t repeat_cheack = 0;
+uint32_t limitswitch_test = 0;
 int32_t test = 0;
 float32_t setpoint = 0;
 
@@ -63,9 +65,14 @@ JOY joy;
 int32_t jog = 0;
 
 // Homing
-uint8_t is_home = 0;
+uint64_t homing_ts = 0; // delay time for 2nd homing
+uint8_t homing_first = 1; // Homing first status
+uint8_t homing_second = 0; // Homing 2nd status
+uint8_t homing = 0; // Homing status
+uint8_t is_home = 0; // Is robot home
 
 // Modes selection
+uint8_t wait_command = 0;
 uint8_t mode = 0; // 0 = base system control, 1 = joy control, 2 = emergency or initial
 
 // Current sensor
@@ -614,7 +621,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : Proximity_Pin Emergency_switch_Pin */
   GPIO_InitStruct.Pin = Proximity_Pin|Emergency_switch_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -651,7 +658,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim3){
 		Update_qei(&encoder, &htim4);
 		Update_adc(&current_sensor);
-		if(encoder.mm > 500 || encoder.mm < 0){
+		if((homing == 0) && (encoder.mm > 500 || encoder.mm < 0)){
 			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 		}
 		else if(mode == 0 || mode == 1){
@@ -667,16 +674,52 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			timestamp++;
 		}
 		else{
+			repeat_cheack++;
 			// Stop motor if emergency
-			if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
+			if(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
+				repeat_cheack++;
 				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 			}
-			else if (!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
+			else if(wait_command){
+				Update_joy(&joy);
+				if(!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
+					// mode 0 selected by push switch 1
+					mode = 0;
+					is_home = 0;
+					wait_command = 0;
+				}
+				else if(joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
+					// mode 1 selected by push switch 2
+					mode = 1;
+					is_home = 0;
+					wait_command = 0;
+				}
+			}
+			else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
+				// If emergency is off
 				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);
 				if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)){
-					// Set home
-					Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, -400);
+					// Homing
+					if(homing_first == 1){
+						homing = 1;
+						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, -100);
+					}
+				}
+				else if(homing_first == 0){
+					// Second time homing
+					if (homing_ts == 8000){
+						// Stop
+						homing_second = 1;
+						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+					}else if(homing_ts == 18000){
+						// Move lower
+						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, -80);
+					}else if(homing_ts == 4000){
+						// Move upper
+						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 200);
+					}
+					homing_ts++;
 				}
 			}
 		}
@@ -695,23 +738,32 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 	if(GPIO_Pin == GPIO_PIN_12){
 		// Proximity interrupted
-		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
-		is_home = 1;
-		uint8_t stop = 1;
-		while(stop){
-			Update_joy(&joy);
-			if(!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
-				// mode 0 selected by push switch 1
-				mode = 0;
-				is_home = 0;
-				stop = 0;
+		limitswitch_test++;
+		if(homing == 1){
+			// If homing
+			if(homing_first == 1){
+				// First time stop
+				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+				homing_first = 0;
+				return;
 			}
-			else if(joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
-				// mode 1 selected by push switch 2
-//				mode = 1;
-				is_home = 0;
-				stop = 0;
+			else if(homing_second == 1){
+				// Second time stop and reset variables.
+				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+				homing_ts = 0;
+				is_home = 1;
+				homing_second = 0;
+				homing_first = 1;
+				homing = 0;
+				wait_command = 1;
+				Reset_qei(&encoder);
 			}
+		}
+		else{
+			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+			mode = 2;
+			homing_first = 0;
+			return;
 		}
 	}
 }
