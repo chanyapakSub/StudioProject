@@ -1,5 +1,6 @@
 "./Core/Src/Basesystem.o"
 "./Core/Src/ModBusRTU.o"
+"./Core/Src/Trajectory.o"
 "./Core/Src/adc.o"
 "./Core/Src/eff.o"
 "./Core/Src/joy.o"

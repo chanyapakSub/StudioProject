@@ -21,8 +21,9 @@ uint16_t Jogging = 0;
 uint16_t Jogginghome = 0;
 uint16_t countPick = 0;
 uint16_t countPlace = 0;
-
+uint16_t state = 0;
 ModbusHandleTypedef hmodbus;
+
 //1.Heart Beat
 //void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 //    if (htim == &htim3 )
@@ -47,6 +48,7 @@ void Gripper_Movement_Status(){
     //Movement Forward
     if (registerFrame[0x03].U16 == 1){ // ใช้ == แทน =
         strcpy(Gripper, "Forward");
+
     }
     //Movement Backward
     else if (registerFrame[0x03].U16 == 0){ // ใช้ == แทน =
@@ -57,6 +59,7 @@ void Gripper_Movement_Status(){
 void Set_Shelves(){
     //Set
     if (registerFrame[0x01].U16 == 1){ // ใช้ == แทน =
+    	state = 1;
         strcpy(Shelves, "SET");
         registerFrame[0x01].U16 = 0;
         registerFrame[0x10].U16 = 1;
@@ -89,6 +92,7 @@ void Run_Point_Mode(){
 }
 
 void Set_Home(){
+	state = 2;
 	registerFrame[0x01].U16 = 2;
 	registerFrame[0x01].U16 = 0;
 	registerFrame[0x01].U16 = 2;
@@ -150,10 +154,13 @@ void Run_Jog_Mode() {
 		strcpy(Jogmode, "Run Jog Mode");
 		registerFrame[0x01].U16 = 0;
 		for (int i = 0; i < 5; i++) {
+
+			state = 4;
 			strcpy(Jogmode, "Go to Pick...");
 			registerFrame[0x10].U16 = 4;
 			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
 
+			state = 8;
 			strcpy(Jogmode, "Go to Place...");
 			registerFrame[0x10].U16 = 8;
 			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน

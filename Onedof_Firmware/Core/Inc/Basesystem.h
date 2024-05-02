@@ -19,6 +19,7 @@ extern uint16_t Jogging;
 extern uint16_t Jogginghome;
 extern uint16_t countPick;
 extern uint16_t countPlace;
+extern uint16_t state;
 
 void Vacuum_Status();
 void Gripper_Movement_Status();

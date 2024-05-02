@@ -219,11 +219,12 @@ int main(void)
 	  Set_Home();
 	  Set_Goal_Point();
 	  //Routime
-	  registerFrame[0x10].U16 = 8;  //Z-axis Moving Status(0x10)
-	  registerFrame[0x11].U16 = 8;	//Z-axis Actual Position(0x11)
-	  registerFrame[0x12].U16 = 8;  //Z-axis Actual Speed (0x12)
-	  registerFrame[0x13].U16 = 8;  //Z-axis Acceleration(0x13)
-	  registerFrame[0x40].U16 = 8;  //X-axis Actual Position(0x40)
+	  registerFrame[0x10].U16 = state;  //Z-axis Moving Status(0x10)
+	  registerFrame[0x11].U16 = encoder.mm;	//Z-axis Actual Position(0x11)
+	  registerFrame[0x12].U16 = encoder.mmps;  //Z-axis Actual Speed (0x12)
+	  registerFrame[0x13].U16 = encoder.mmpss;  //Z-axis Acceleration(0x13)    //////ความเร่งต้องเปลี่ยน/////
+//	  registerFrame[0x40].U16 = encoder.rpm;  //X-axis Actual Position(0x40)
+
 	  while(mode == 1){
 		  Update_joy(&joy);
 		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
@@ -780,10 +781,10 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 // Main timer interrupt for run program with accuracy time
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-//	if(htim == &htim5){
-//		//Update modbus
-//		registerFrame[0x00].U16 = 22881;
-//	}
+	if(htim == &htim5){
+		//Update modbus
+		registerFrame[0x00].U16 = 22881;
+	}
 	if(htim == &htim3){
 		//Update main
 		Update_qei(&encoder, &htim4);
@@ -848,6 +849,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 					}else if(homing_ts == 4000){
 						// Move upper
 						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 200);
+
 					}
 					homing_ts++;
 				}

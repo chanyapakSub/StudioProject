@@ -21,6 +21,11 @@ void QEI_init(QEI* qei, int32_t ppr, int32_t freq, int32_t period){
 	qei -> rpm = 0.0;
 	qei -> radps = 0.0;
 	qei -> mmps = 0.0;
+	qei -> radpss = 0.0;
+	qei -> rpms = 0.0;
+	qei -> mmpss = 0.0;
+
+
 }
 
 void Update_qei(QEI* qei, TIM_HandleTypeDef* htim){
@@ -40,12 +45,20 @@ void Update_qei(QEI* qei, TIM_HandleTypeDef* htim){
 	qei -> radps = qei -> pps * 2.0 * M_PI / (float)(qei -> ppr);
 	qei -> rpm = qei -> pps * 60.0 / (float)(qei -> ppr) ;
 	qei -> mmps = qei -> pps * 16.0 / (float)(qei -> ppr);
+
 	// Update position at difference unit
 	qei -> pulse += qei -> diff_counter_value;
 	qei -> rad += (float)qei -> diff_counter_value * 2.0 * M_PI / (float)(qei -> ppr);
 	qei -> rev += (float)qei -> diff_counter_value / (float)(qei -> ppr);
 	qei -> mm += (float)qei -> diff_counter_value * 16.0 / (float)(qei -> ppr); // for lead 16 mm.
-	// Update acceleration at difference
+
+	// Update acceleration
+	qei -> velocity_value[NEW] = qei -> pps;
+	qei -> diff_velocity_value = qei -> velocity_value[NEW] - qei -> velocity_value[OLD];
+	qei -> ppss = qei -> diff_velocity_value * (float)qei -> freq;
+	qei -> radpss = qei -> ppss * 2.0 * M_PI / (float)(qei -> ppr);
+	qei -> rpms = qei -> ppss * 60.0 / (float)(qei -> ppr);
+	qei -> mmpss = qei -> ppss * 16.0 / (float)(qei -> ppr); // Acceleration in mm/s^2
 
 	// Update OLD value
 	qei -> counter_value[OLD] = qei -> counter_value[NEW];

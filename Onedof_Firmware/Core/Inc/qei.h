@@ -27,6 +27,12 @@ typedef struct{
 	float32_t rpm; // POSITION AT PULSE UNIT
 	float32_t radps; // POSITION AT PULSE UNIT
 	float32_t mmps; // POSITION AT MILLIMETER UNIT
+	float32_t velocity_value[2];
+	float32_t diff_velocity_value;
+	float32_t ppss;
+	float32_t radpss;
+	float32_t rpms;
+	float32_t mmpss; //AC AT MILLIMETER UNIT
 } QEI;
 enum{
 	NEW,OLD
