@@ -63,6 +63,7 @@ DMA_HandleTypeDef hdma_usart2_tx;
 uint64_t repeat_cheack = 0;
 uint32_t limitswitch_test = 0;
 int32_t test = 0;
+uint64_t sensor_test[5] = {0};
 float32_t setpoint = 0;
 
 // Joy
@@ -78,8 +79,9 @@ uint8_t is_home = 0; // Is robot home
 
 // Modes selection
 uint8_t wait_command = 0;
-uint8_t mode = 0; // 0 = base system control, 1 = joy control, 2 = emergency or initial
-
+uint8_t mode = 3;	/*	0 = base system control, 1 = joy control,
+						2 = emergency or initial, 3 = sensor test
+ 	 	 	 	 	 */
 // Current sensor
 ADC current_sensor;
 
@@ -194,7 +196,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  while(mode == 1){
+
+	  if(mode == 1){
 		  Update_joy(&joy);
 		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
 			  // switch 1 has pushed
@@ -706,9 +709,16 @@ static void MX_GPIO_Init(void)
 // Main timer interrupt for run program with accuracy time
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim3){
-		Update_qei(&encoder, &htim4);
-		Update_adc(&current_sensor);
-		if((homing == 0) && (encoder.mm > 500 || encoder.mm < 0)){
+//		Update_qei(&encoder, &htim4);
+//		Update_adc(&current_sensor);
+		if(mode == 3){
+			sensor_test[0] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12); // Proximity
+			sensor_test[1] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7); // Reed switch 1
+			sensor_test[2] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9); // Reed switch 2
+			sensor_test[3] = __HAL_TIM_GET_COUNTER(&htim4); // Encoder
+
+		}
+		else if((homing == 0) && (encoder.mm > 500 || encoder.mm < 0)){
 			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 		}
 		else if(mode == 0 || mode == 1){
