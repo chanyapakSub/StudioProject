@@ -1,0 +1,8 @@
+../Core/Src/Basesystem.c:35:6:Vacuum_Status	4	static
+../Core/Src/Basesystem.c:46:6:Gripper_Movement_Status	4	static
+../Core/Src/Basesystem.c:57:6:Set_Shelves	4	static
+../Core/Src/Basesystem.c:77:6:Set_Goal_Point	8	static
+../Core/Src/Basesystem.c:83:6:Run_Point_Mode	4	static
+../Core/Src/Basesystem.c:91:6:Set_Home	4	static
+../Core/Src/Basesystem.c:102:6:SetPick_PlaceOrder	4	static
+../Core/Src/Basesystem.c:148:6:Run_Jog_Mode	24	static

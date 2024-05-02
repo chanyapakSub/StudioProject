@@ -5,4 +5,6 @@
  *      Author: naker
  */
 
-
+//void eff_init(EFF *eff){
+//
+//}

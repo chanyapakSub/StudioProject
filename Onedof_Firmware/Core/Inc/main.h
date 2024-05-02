@@ -68,10 +68,6 @@ void Error_Handler(void);
 #define Direaction_motor_GPIO_Port GPIOC
 #define Current_sensor_Pin GPIO_PIN_0
 #define Current_sensor_GPIO_Port GPIOA
-#define LPUART1_TX_Pin GPIO_PIN_2
-#define LPUART1_TX_GPIO_Port GPIOA
-#define LPUART1_RX_Pin GPIO_PIN_3
-#define LPUART1_RX_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
 #define joy_switch_3_Pin GPIO_PIN_4
