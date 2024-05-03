@@ -3,8 +3,8 @@
 
 #include "main.h"
 #include "ModBusRTU.h"
+#include "eff.h"
 
-extern ModbusHandleTypedef hmodbus;
 extern ModbusHandleTypedef hmodbus;
 extern u16u8_t registerFrame[200];
 extern char Vacuum[10];
@@ -20,9 +20,10 @@ extern uint16_t Jogginghome;
 extern uint16_t countPick;
 extern uint16_t countPlace;
 extern uint16_t state;
+extern uint8_t set_shelves_state;
 
-void Vacuum_Status();
-void Gripper_Movement_Status();
+void Vacuum_Status(EFF* eff);
+void Gripper_Movement_Status(EFF* eff);
 void Set_Shelves();
 void Set_Goal_Point();
 void Run_Point_Mode();

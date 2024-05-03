@@ -22,37 +22,34 @@ uint16_t Jogginghome = 0;
 uint16_t countPick = 0;
 uint16_t countPlace = 0;
 uint16_t state = 0;
+uint8_t set_shelves_state = 0;
 ModbusHandleTypedef hmodbus;
 
-//1.Heart Beat
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-//    if (htim == &htim3 )
-//    {
-//       registerFrame[0x00].U16 = 22881;
-//    }
-//}
-
-
-void Vacuum_Status(){
+void Vacuum_Status(EFF* eff){
     //Vacuum On
     if (registerFrame[0x02].U16 == 1){ // ใช้ == แทน =
         strcpy(Vacuum, "On");
+        eff -> solenoid_command[0] = 1;
     }
     //Vacuum Off
     else if (registerFrame[0x02].U16 == 0){ // ใช้ == แทน =
         strcpy(Vacuum, "Off");
+        eff -> solenoid_command[0] = 0;
     }
 }
 
-void Gripper_Movement_Status(){
+void Gripper_Movement_Status(EFF* eff){
     //Movement Forward
     if (registerFrame[0x03].U16 == 1){ // ใช้ == แทน =
         strcpy(Gripper, "Forward");
-
+        eff -> solenoid_command[1] = 1;
+        eff -> solenoid_command[2] = 0;
     }
     //Movement Backward
     else if (registerFrame[0x03].U16 == 0){ // ใช้ == แทน =
         strcpy(Gripper, "Backward");
+        eff -> solenoid_command[1] = 0;
+        eff -> solenoid_command[2] = 1;
     }
 }
 
@@ -63,10 +60,10 @@ void Set_Shelves(){
         strcpy(Shelves, "SET");
         registerFrame[0x01].U16 = 0;
         registerFrame[0x10].U16 = 1;
-
-        if(Jogging == 1){
-            registerFrame[0x10].U16 = 0;
-        }
+        set_shelves_state = 1;
+//        if(Jogging == 1){
+//            registerFrame[0x10].U16 = 0;
+//        }
     }
 
     registerFrame[0x23].U16 = 8;  //1st Shelve Position
@@ -79,23 +76,21 @@ void Set_Shelves(){
 
 void Set_Goal_Point(){
 	if (registerFrame[0x30].U16 != 0){
+//		*set_point = registerFrame[0x30].U16;
 		Run_Point_Mode();
 	 }
 }
 
 void Run_Point_Mode(){
-
 	if (registerFrame[0x01].U16 == 8){
 		registerFrame[0x01].U16 = 0;
-		registerFrame[0x10].U16 = 1 ;
+		registerFrame[0x10].U16 = 8;
+		state = registerFrame[0x10].U16;
 	}
 }
 
 void Set_Home(){
 	state = 2;
-	registerFrame[0x01].U16 = 2;
-	registerFrame[0x01].U16 = 0;
-	registerFrame[0x01].U16 = 2;
 	strcpy(Home, "Homing...");
 	if (Jogginghome == 1){
 		registerFrame[0x01].U16 = 0;

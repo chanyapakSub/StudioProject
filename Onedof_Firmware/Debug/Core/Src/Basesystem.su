@@ -1,8 +1,8 @@
-../Core/Src/Basesystem.c:36:6:Vacuum_Status	4	static
-../Core/Src/Basesystem.c:47:6:Gripper_Movement_Status	4	static
-../Core/Src/Basesystem.c:59:6:Set_Shelves	4	static
-../Core/Src/Basesystem.c:80:6:Set_Goal_Point	8	static
-../Core/Src/Basesystem.c:86:6:Run_Point_Mode	4	static
-../Core/Src/Basesystem.c:94:6:Set_Home	4	static
-../Core/Src/Basesystem.c:106:6:SetPick_PlaceOrder	4	static
-../Core/Src/Basesystem.c:152:6:Run_Jog_Mode	24	static
+../Core/Src/Basesystem.c:28:6:Vacuum_Status	16	static
+../Core/Src/Basesystem.c:41:6:Gripper_Movement_Status	16	static
+../Core/Src/Basesystem.c:56:6:Set_Shelves	4	static
+../Core/Src/Basesystem.c:77:6:Set_Goal_Point	8	static
+../Core/Src/Basesystem.c:84:6:Run_Point_Mode	4	static
+../Core/Src/Basesystem.c:92:6:Set_Home	4	static
+../Core/Src/Basesystem.c:101:6:SetPick_PlaceOrder	4	static
+../Core/Src/Basesystem.c:147:6:Run_Jog_Mode	24	static
