@@ -1,6 +1,6 @@
 Middlewares/Third_Party/ARM_CMSIS/Source/BayesFunctions/BayesFunctionsF16.o: \
  ../Middlewares/Third_Party/ARM_CMSIS/Source/BayesFunctions/BayesFunctionsF16.c \
- D:/Electonic/micro/Onedof_Firmware/Source/BayesFunctions/arm_gaussian_naive_bayes_predict_f16.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/BayesFunctions/arm_gaussian_naive_bayes_predict_f16.c \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/bayes_functions_f16.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types_f16.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h \
@@ -15,7 +15,7 @@ Middlewares/Third_Party/ARM_CMSIS/Source/BayesFunctions/BayesFunctionsF16.o: \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/fast_math_functions_f16.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/fast_math_functions.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/basic_math_functions.h
-D:/Electonic/micro/Onedof_Firmware/Source/BayesFunctions/arm_gaussian_naive_bayes_predict_f16.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/BayesFunctions/arm_gaussian_naive_bayes_predict_f16.c:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/bayes_functions_f16.h:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types_f16.h:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h:
