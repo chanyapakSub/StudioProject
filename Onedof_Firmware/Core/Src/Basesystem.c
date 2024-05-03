@@ -82,7 +82,7 @@ void Set_Goal_Point(){
 
 void Run_Point_Mode(){
 
-	if (registerFrame[0x01].U16 = 8){
+	if (registerFrame[0x01].U16 == 8){
 		registerFrame[0x01].U16 = 0;
 		registerFrame[0x10].U16 = 1 ;
 	}
@@ -146,7 +146,7 @@ void SetPick_PlaceOrder() {
 
 
 void Run_Jog_Mode() {
-	if (registerFrame[0x01].U16 = 4) {
+	if (registerFrame[0x01].U16 == 4) {
 		strcpy(Jogmode, "Run Jog Mode");
 		registerFrame[0x01].U16 = 0;
 		for (int i = 0; i < 5; i++) {

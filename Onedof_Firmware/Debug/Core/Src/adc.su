@@ -1,2 +1,0 @@
-../Core/Src/adc.c:10:6:ADC_init	16	static
-../Core/Src/adc.c:14:10:Update_adc	48	static

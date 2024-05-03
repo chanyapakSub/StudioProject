@@ -1,5 +1,0 @@
-../Core/Src/qei.c:9:6:QEI_init	24	static
-../Core/Src/qei.c:26:6:Update_qei	40	static
-../Core/Src/qei.c:55:6:Reset_qei	16	static
-../Core/Src/qei.c:67:11:Get_mmps	16	static
-../Core/Src/qei.c:70:11:Get_mm	16	static

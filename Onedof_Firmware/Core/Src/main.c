@@ -24,6 +24,9 @@
 #include "arm_math.h"
 #include "ModBusRTU.h"
 #include "Basesystem.h"
+//#include "Trajectory.h"
+#include "kalman.h"
+#include "eff.h"
 #include "pid.h"
 #include "qei.h"
 #include "pwm.h"
@@ -65,6 +68,15 @@ uint32_t limitswitch_test = 0;
 int32_t test = 0;
 uint64_t sensor_test[5] = {0};
 float32_t setpoint = 0;
+
+// End effector
+EFF eff;
+
+// Kalman
+KalmanFilter kalman;
+
+// Modbus
+u16u8_t registerFrame[200];
 
 // Joy
 JOY joy;
@@ -170,6 +182,17 @@ int main(void)
   MX_TIM16_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  //Modbus setting
+  hmodbus.huart = &huart2;
+  hmodbus.htim = &htim16;
+  hmodbus.slaveAddress = 0x15;
+  hmodbus.RegisterSize =200;
+  Modbus_init(&hmodbus, registerFrame);
+
+  //Update MODBUS timer
+  HAL_TIM_Base_Start_IT(&htim5);
+
   //Update command timer
   HAL_TIM_Base_Start_IT(&htim3);
 
@@ -196,7 +219,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
 	  if(mode == 1){
 		  Update_joy(&joy);
 		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
@@ -708,6 +730,33 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 // Main timer interrupt for run program with accuracy time
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if(htim == &htim5){
+		//Update modbus
+		Modbus_Protocal_Worker();
+		Set_Shelves();
+		Gripper_Movement_Status();
+		Vacuum_Status();
+		Run_Jog_Mode();
+		SetPick_PlaceOrder();
+		Set_Home();
+		Set_Goal_Point();
+		static uint8_t hb_status = 0;
+		registerFrame[0x00].U16 = 22881;
+		if(registerFrame[0x00].U16 == 18537 && hb_status == 0){
+			registerFrame[0x00].U16 = 22881;
+			hb_status = 1;
+		}
+		else if(registerFrame[0x00].U16 == 22881 && hb_status == 1){
+			Update_endeffector_status(&eff, GPIOC, GPIO_PIN_7, GPIOA, GPIO_PIN_9); // Update eff status
+			registerFrame[0x04].U16 = eff.gripper_actual_status; //Gripper Movement Actual status(0x04)
+			registerFrame[0x10].U16 = state;  //Z-axis Moving Status(0x10)
+			registerFrame[0x11].U16 = encoder.mm;	//Z-axis Actual Position(0x11)
+			registerFrame[0x12].U16 = encoder.mmps;  //Z-axis Actual Speed (0x12)
+			registerFrame[0x13].U16 = encoder.mmpss;  //Z-axis Acceleration(0x13)    //////ความเร่งต้องเปลี่ยน/////
+//			registerFrame[0x40].U16 = encoder.rpm;  //X-axis Actual Position(0x40)
+			hb_status = 0;
+		}
+	}
 	if(htim == &htim3){
 //		Update_qei(&encoder, &htim4);
 //		Update_adc(&current_sensor);
@@ -724,7 +773,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		else if(mode == 0 || mode == 1){
 			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, v_output);
 			if(mode == 0){ setpoint = 0;} // If mode == 0 : set point from base system
-			else if(mode == 1){setpoint = 1;} // If mode == 1 : set point from joy
+			else if(mode == 1){ setpoint = jog; } // If mode == 1 : set point from joy
 			Update_velocity_control(test);
 			static uint64_t timestamp = 0;
 			if (timestamp == 8){
@@ -734,7 +783,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			timestamp++;
 		}
 		else{
-			repeat_cheack++;
+//			repeat_cheack++;
 			// Stop motor if emergency
 			if(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
 				repeat_cheack++;
@@ -794,11 +843,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 		// Emergency light enable
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);
-//		mode = 2;
+		mode = 2;
 	}
 	if(GPIO_Pin == GPIO_PIN_12){
 		// Proximity interrupted
-		limitswitch_test++;
+//		limitswitch_test++;
 		if(homing == 1){
 			// If homing
 			if(homing_first == 1){

@@ -23,10 +23,19 @@ typedef struct{
 	float32_t rev; // POSITION AT REVOLUTION UNIT
 	float32_t rad; // POSITION AT RADIANT UNIT
 	float32_t mm; // POSITION AT MILLIMETER UNIT
-	float64_t pps; // POSITION AT PULSE UNIT
-	float32_t rpm; // POSITION AT PULSE UNIT
-	float32_t radps; // POSITION AT PULSE UNIT
+	float32_t pps; // POSITION AT PULSE UNIT
+	float32_t rpm; // POSITION AT REVOLUTION UNIT
+	float32_t radps; // POSITION AT RADIANT UNIT
 	float32_t mmps; // POSITION AT MILLIMETER UNIT
+<<<<<<< Updated upstream
+=======
+	float32_t velocity_value[2]; // VELOCITY AT PUSLE UNIT FOR CALCULATE ACC
+	float32_t diff_velocity_value; // DIFFERENCE OF NEW & OLD VALUE OF VELOCITY
+	float32_t ppss; // ACC AT PULSE UNIT
+	float32_t rpms; // ACC AT REVOLUTION UNIT
+	float32_t radpss; // ACC AT RADIANT UNIT
+	float32_t mmpss; // ACC AT MILLIMETER UNIT
+>>>>>>> Stashed changes
 } QEI;
 enum{
 	NEW,OLD
