@@ -66,6 +66,7 @@ uint64_t repeat_cheack = 0;
 uint32_t limitswitch_test = 0;
 int32_t test = 0;
 float32_t setpoint = 0;
+uint64_t sensor[5] = {0};
 
 // Modbus
 u16u8_t registerFrame[200];
@@ -75,6 +76,7 @@ JOY joy;
 int32_t jog = 0;
 
 // Homing
+
 uint64_t homing_ts = 0; // delay time for 2nd homing
 uint8_t homing_first = 1; // Homing first status
 uint8_t homing_second = 0; // Homing 2nd status
@@ -83,7 +85,7 @@ uint8_t is_home = 0; // Is robot home
 
 // Modes selection
 uint8_t wait_command = 0;
-uint8_t mode = 0; // 0 = base system control, 1 = joy control, 2 = emergency or initial
+uint8_t mode = 2; // 0 = base system control, 1 = joy control, 2 = emergency or initial
 
 // Current sensor
 ADC current_sensor;
@@ -210,37 +212,41 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Modbus_Protocal_Worker();
-	  Set_Shelves();
-	  Gripper_Movement_Status();
-	  Vacuum_Status();
-	  Run_Jog_Mode();
-	  SetPick_PlaceOrder();
-	  Set_Home();
-	  Set_Goal_Point();
-	  //Routime
-	  registerFrame[0x10].U16 = state;  //Z-axis Moving Status(0x10)
-	  registerFrame[0x11].U16 = encoder.mm;	//Z-axis Actual Position(0x11)
-	  registerFrame[0x12].U16 = encoder.mmps;  //Z-axis Actual Speed (0x12)
-	  registerFrame[0x13].U16 = encoder.mmpss;  //Z-axis Acceleration(0x13)    //////ความเร่งต้องเปลี่ยน/////
+//	  Modbus_Protocal_Worker();
+//	  Set_Shelves();
+//	  Gripper_Movement_Status();
+//	  Vacuum_Status();
+//	  Run_Jog_Mode();
+//	  SetPick_PlaceOrder();
+//	  Set_Home();
+//	  Set_Goal_Point();
+//	  //Routime
+//	  registerFrame[0x10].U16 = state;  //Z-axis Moving Status(0x10)
+//	  registerFrame[0x11].U16 = encoder.mm;	//Z-axis Actual Position(0x11)
+//	  registerFrame[0x12].U16 = encoder.mmps;  //Z-axis Actual Speed (0x12)
+//	  registerFrame[0x13].U16 = encoder.mmpss;  //Z-axis Acceleration(0x13)    //////ความเร่งต้องเปลี่ยน/////
 //	  registerFrame[0x40].U16 = encoder.rpm;  //X-axis Actual Position(0x40)
+	  sensor[0] = __HAL_TIM_GET_COUNTER(&htim4);
+	  sensor[1] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12);
+	  sensor[2] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6);
+	  sensor[3] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15);
 
-	  while(mode == 1){
-		  Update_joy(&joy);
-		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
-			  // switch 1 has pushed
-			  jog += 10; // Move up 10 mm.
-		  }else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
-			  // switch 2 has pushed
-			  jog -= 10; // Move down 10 mm.
-		  }else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
-			  // switch 3 has pushed
-			  mode = 0; // Change mode to Automatic
-		  }else if (joy.s_1 && joy.s_2 && joy.s_3 && !joy.s_4){
-			  // switch 4 has pushed
-			  // save data for base system
-		  }
-	  }
+//	  while(mode == 1){
+//		  Update_joy(&joy);
+//		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
+//			  // switch 1 has pushed
+//			  jog += 10; // Move up 10 mm.
+//		  }else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
+//			  // switch 2 has pushed
+//			  jog -= 10; // Move down 10 mm.
+//		  }else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
+//			  // switch 3 has pushed
+//			  mode = 0; // Change mode to Automatic
+//		  }else if (joy.s_1 && joy.s_2 && joy.s_3 && !joy.s_4){
+//			  // switch 4 has pushed
+//			  // save data for base system
+//		  }
+//	  }
   }
   /* USER CODE END 3 */
 }
@@ -461,7 +467,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 169;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 99;
+  htim3.Init.Period = 124;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -745,11 +751,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Proximity_Pin Emergency_switch_Pin */
-  GPIO_InitStruct.Pin = Proximity_Pin|Emergency_switch_Pin;
+  /*Configure GPIO pin : Proximity_Pin */
+  GPIO_InitStruct.Pin = Proximity_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Proximity_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Emergency_switch_Pin */
+  GPIO_InitStruct.Pin = Emergency_switch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(Emergency_switch_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Emergency_light_Pin */
   GPIO_InitStruct.Pin = Emergency_light_Pin;
@@ -805,10 +817,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			timestamp++;
 		}
 		else{
-			repeat_cheack++;
+//			repeat_cheack++;
 			// Stop motor if emergency
 			if(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
-				repeat_cheack++;
+//				repeat_cheack++;
 				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 			}
 			else if(wait_command){
@@ -828,7 +840,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			}
 			else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15)){
 				// If emergency is off
-				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+//				Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, RESET);
 				if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6)){
 					// Homing
@@ -845,7 +857,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
 					}else if(homing_ts == 18000){
 						// Move lower
-						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, -80);
+						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, -100);
 					}else if(homing_ts == 4000){
 						// Move upper
 						Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 200);
@@ -860,14 +872,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 // GPIO interrupt
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
-	if(GPIO_Pin == GPIO_PIN_15){
-		// Emergency switch interrupted
-		// Stop motor
-		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
-		// Emergency light enable
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);
+//	if(GPIO_Pin == GPIO_PIN_15){
+//		// Emergency switch interrupted
+//		// Stop motor
+//		Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, 0);
+//		// Emergency light enable
+//		Reset_qei(&encoder);
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, SET);
 //		mode = 2;
-	}
+//	}
 	if(GPIO_Pin == GPIO_PIN_12){
 		// Proximity interrupted
 		limitswitch_test++;
@@ -889,6 +902,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				homing = 0;
 				wait_command = 1;
 				Reset_qei(&encoder);
+			}
+			else if(is_home == 1){
+				return;
 			}
 		}
 		else{

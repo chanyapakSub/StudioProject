@@ -1,5 +1,5 @@
 ../Core/Src/qei.c:9:6:QEI_init	1
-../Core/Src/qei.c:31:6:Update_qei	3
-../Core/Src/qei.c:68:6:Reset_qei	1
-../Core/Src/qei.c:80:11:Get_mmps	1
-../Core/Src/qei.c:83:11:Get_mm	1
+../Core/Src/qei.c:32:6:Update_qei	3
+../Core/Src/qei.c:70:6:Reset_qei	1
+../Core/Src/qei.c:89:11:Get_mmps	1
+../Core/Src/qei.c:92:11:Get_mm	1
