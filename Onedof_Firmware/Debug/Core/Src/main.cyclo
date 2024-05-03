@@ -9,9 +9,9 @@
 ../Core/Src/main.c:643:13:MX_USART2_UART_Init	5
 ../Core/Src/main.c:689:13:MX_DMA_Init	1
 ../Core/Src/main.c:714:13:MX_GPIO_Init	1
-../Core/Src/main.c:803:6:HAL_TIM_PeriodElapsedCallback	7
-../Core/Src/main.c:920:6:HAL_GPIO_EXTI_Callback	2
-../Core/Src/main.c:934:6:Update_torque_control	1
-../Core/Src/main.c:938:6:Update_velocity_control	1
-../Core/Src/main.c:944:6:Update_position_control	1
-../Core/Src/main.c:955:6:Error_Handler	1
+../Core/Src/main.c:803:6:HAL_TIM_PeriodElapsedCallback	8
+../Core/Src/main.c:927:6:HAL_GPIO_EXTI_Callback	2
+../Core/Src/main.c:941:6:Update_torque_control	1
+../Core/Src/main.c:945:6:Update_velocity_control	1
+../Core/Src/main.c:951:6:Update_position_control	1
+../Core/Src/main.c:962:6:Error_Handler	1

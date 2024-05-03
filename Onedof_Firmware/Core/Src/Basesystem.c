@@ -73,11 +73,9 @@ void Set_Shelves(){
     registerFrame[0x27].U16 = 8;  //5th Shelve Position
 }
 
-
+// wait for Data type check
 void Set_Goal_Point(){
 	if (registerFrame[0x30].U16 != 0){
-//		*set_point = registerFrame[0x30].U16;
-		Run_Point_Mode();
 	 }
 }
 
@@ -90,11 +88,16 @@ void Run_Point_Mode(){
 }
 
 void Set_Home(){
-	state = 2;
-	strcpy(Home, "Homing...");
-	if (Jogginghome == 1){
-		registerFrame[0x01].U16 = 0;
+	if(registerFrame[0x10].U16 == 2){
+		state = 2;
+		strcpy(Home, "Homing...");
 	}
+	else{
+		return;
+	}
+//	if (Jogginghome == 1){
+//		registerFrame[0x01].U16 = 0;
+//	}
 
 
 }

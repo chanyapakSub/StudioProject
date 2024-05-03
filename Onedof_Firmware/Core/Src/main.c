@@ -68,7 +68,7 @@ uint8_t tuning = 0;
 uint64_t repeat_cheack = 0;
 uint32_t limitswitch_test = 0;
 int32_t test = 0;
-float32_t setpoint = 0;
+//float32_t setpoint = 0;
 uint64_t sensor[5] = {0};
 
 // Set point
@@ -845,13 +845,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 		// Tuning and test mode
 		else if(tuning == 1){
-
+			static uint64_t control_loop_ts = 0;
+			if(control_loop_ts == 8){
+//				Update_position_control(v_output);
+				control_loop_ts = 0;
+			}
+			else{control_loop_ts++;}
+			Update_velocity_control(test);
+			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, v_output);
 		}
 		else{
 			// Check for set shelves command
-			Set_Shelves();
+//			Set_Shelves();
 			// Check for point mode
-			Set_Goal_Point();
+//			Set_Goal_Point(set_point);
 //			Update_pwm(&htim1, TIM_CHANNEL_1, GPIOC, GPIO_PIN_1, v_output);
 //			if(mode == 0){ setpoint = 0;} // If mode == 0 : set point from base system
 //			else if(mode == 1){setpoint = 1;} // If mode == 1 : set point from joy
