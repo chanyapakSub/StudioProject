@@ -1,2 +1,4 @@
-../Core/Src/state.c:9:6:homing	72	static
-../Core/Src/state.c:126:6:emergency	24	static
+../Core/Src/state.c:9:6:point_init	16	static
+../Core/Src/state.c:15:6:homing_init	16	static
+../Core/Src/state.c:24:6:homing	56	static
+../Core/Src/state.c:122:6:emergency	24	static

@@ -1,0 +1,2 @@
+../Core/Src/Trajectory.c:13:6:checkStartMoving	48	static
+../Core/Src/Trajectory.c:46:6:createTrajectory	40	static

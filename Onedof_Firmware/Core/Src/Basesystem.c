@@ -74,17 +74,17 @@ void Set_Shelves(){
 }
 
 // wait for Data type check
-void Set_Goal_Point(){
-	if (registerFrame[0x30].U16 != 0){
-	 }
+uint16_t Set_Goal_Point(){
+	return registerFrame[0x30].U16;
 }
 
-void Run_Point_Mode(){
+uint16_t Run_Point_Mode(){
 	if (registerFrame[0x01].U16 == 8){
 		registerFrame[0x01].U16 = 0;
-		registerFrame[0x10].U16 = 8;
+		registerFrame[0x10].U16 = 16;
 		state = registerFrame[0x10].U16;
-	}
+		return 1;
+	}else{return 0;}
 }
 
 void Set_Home(){
@@ -148,11 +148,10 @@ void SetPick_PlaceOrder() {
 
 
 void Run_Jog_Mode() {
-	if (registerFrame[0x01].U16 == 4) {
+	if (registerFrame[0x01].U16 == 1) {
 		strcpy(Jogmode, "Run Jog Mode");
 		registerFrame[0x01].U16 = 0;
 		for (int i = 0; i < 5; i++) {
-
 			state = 4;
 			strcpy(Jogmode, "Go to Pick...");
 			registerFrame[0x10].U16 = 4;
