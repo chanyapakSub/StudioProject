@@ -17,7 +17,7 @@ typedef struct{
 	float32_t ki; //I GAIN FOR PID
 	float32_t kd; //D GAIN FOR PID
 	float32_t sampt; //SAMPLING TIME
-	float64_t y_n; //Initial output
+	float32_t y_n; //Initial output
 
 } PID;
 

@@ -57,6 +57,7 @@
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_tim1_ch1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
@@ -250,6 +251,20 @@ void DMA1_Channel3_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles DMA1 channel4 global interrupt.
+  */
+void DMA1_Channel4_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel4_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel4_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_tim1_ch1);
+  /* USER CODE BEGIN DMA1_Channel4_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel4_IRQn 1 */
+}
+
+/**
   * @brief This function handles ADC1 and ADC2 global interrupt.
   */
 void ADC1_2_IRQHandler(void)
@@ -328,7 +343,6 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
   /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(Proximity_Pin);
   HAL_GPIO_EXTI_IRQHandler(B1_Pin);
   HAL_GPIO_EXTI_IRQHandler(Emergency_switch_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
