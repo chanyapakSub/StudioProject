@@ -184,7 +184,7 @@ float v_kp = 18.0;
 float v_ki = 1.75;
 float v_kd = 0.0;
 float v_e = 0.0;
-int32_t v_output = 0; // for testing only int32_t
+int32_t v_output = 0;
 
 // Position pid
 PID p_pid;
@@ -192,7 +192,7 @@ float p_kp = 1.0;
 float p_ki = 0.0;
 float p_kd = 0.0;
 float p_e = 0.0;
-int32_t p_output = 0; // for testing only int32_t
+float p_output = 0;
 uint8_t start_position_control = 0;
 
 // Kalman filter
@@ -333,39 +333,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  Modbus_Protocal_Worker();
-//	  Set_Shelves();
-//	  Gripper_Movement_Status();
-//	  Vacuum_Status();
-//	  Run_Jog_Mode();
-//	  SetPick_PlaceOrder();
-//	  Set_Home();
-//	  Set_Goal_Point();
-
-//	  sensor[0] = __HAL_TIM_GET_COUNTER(&htim4);
-//	  sensor[1] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12);
-//	  sensor[2] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6);
-//	  sensor[3] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15);
-//	  sensor[4] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9);
-//	  sensor[5] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
-//	  while(mode == 1){
-//		  Update_joy(&joy);
-//		  if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
-//			  // switch 1 has pushed
-//			  jog += 10; // Move up 10 mm.
-//		  }else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
-//			  // switch 2 has pushed
-//			  jog -= 10; // Move down 10 mm.
-//		  }else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
-//			  // switch 3 has pushed
-//			  mode = 0; // Change mode to Automatic
-//		  }else if (joy.s_1 && joy.s_2 && joy.s_3 && !joy.s_4){
-//			  // switch 4 has pushed
-//			  // save data for base system
-//		  }
-//	  }
 
 		// Update modbus
+		Modbus_Protocal_Worker();
 		// Routine
 		registerFrame[0x04].U16 = eff.update_actual_status[0x04].U16;	// Gripper Movement Actual Status(0x10)
 		registerFrame[0x10].U16 = state;							// Z-axis Moving Status(0x10)
@@ -389,17 +359,28 @@ int main(void)
 				Set_Home(); // Refresh homing command from base system
 				if(state == 0b0010){
 					// Have command from base system
-					mode = HOMING;
 					home.homing_command = 1;
 					registerFrame[0x01].U16 = 0b0000; // Reset data of base system status
 					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
 				}
 				else if(HAL_GPIO_ReadPin(home_gpio, home_pin) == 1){
 					// Have command from home switch
-					mode = HOMING;
 					home.homing_command = 1;
 //					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
-					}
+				}
+			}
+			if(home.homing_command == 1 && eff.actual_status[0] == 1 && eff.actual_status[1] == 0){
+				eff.solenoid_command[0] = 0;
+				eff.solenoid_command[1] = 0;
+				eff.solenoid_command[2] = 0;
+				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
+				mode = HOMING;
+			}
+			else if(home.homing_command == 1 && eff.actual_status[0] == 0 && eff.actual_status[1] == 1){
+				eff.solenoid_command[0] = 0;
+				eff.solenoid_command[1] = 0;
+				eff.solenoid_command[2] = 1;
+				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
 			}
 			else{
 				// Nothing happen
@@ -407,6 +388,7 @@ int main(void)
 				Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, pwm_signal); // Update main PWM signal
 			}
 		}
+
 		if(mode == RUNNING){
 			if(testing == 1){
 				sensor[0] = __HAL_TIM_GET_COUNTER(&encoder_tim); // Encoder
@@ -415,11 +397,41 @@ int main(void)
 				sensor[3] = HAL_GPIO_ReadPin(reed_push_gpio, reed_push_pin); // Reed switch push
 				sensor[4] = HAL_GPIO_ReadPin(emer_gpio, emer_pin); // Emergency button
 				sensor[5] = HAL_GPIO_ReadPin(home_gpio, home_pin); // Home button
+				static uint64_t timestamp = 0;
+				if(HAL_GetTick() >= timestamp + 1500){
+					eff.solenoid_command[0] = 1;
+					eff.solenoid_command[1] = 1;
+					eff.solenoid_command[2] = 0;
+					timestamp = HAL_GetTick() + 1500;
+				}
+				else if(HAL_GetTick() > timestamp){
+					eff.solenoid_command[0] = 0;
+					eff.solenoid_command[1] = 0;
+					eff.solenoid_command[2] = 1;
+				}
 			}
 			else if(testing == 0){
 				// Check command from base system status
+				//  homing command from Homing button and Base system Check command
+				Set_Home(); // Refresh homing command from base system
+				if(state == 0b0010){
+					// Have command from base system
+					mode = WAIT; // Go to wait mode for Deactivate end effector
+					home.homing_command = 1;
+					registerFrame[0x01].U16 = 0b0000; // Reset data of base system status
+					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
+					state = registerFrame[0x10].U16 = 0b0010;
+				}
+				else if(HAL_GPIO_ReadPin(home_gpio, home_pin) == 1){
+					// Have command from home switch
+					mode = WAIT;// Go to wait mode for Deactivate end effector
+					home.homing_command = 1;
+					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
+					state = registerFrame[0x10].U16 = 0b0010;
+				}
+
 				// Go point command from base system
-				if(Run_Point_Mode() == 1){
+				else if(Run_Point_Mode() == 1){
 					setpoint = Set_Goal_Point();
 					ready = 1;
 				}
@@ -473,7 +485,7 @@ int main(void)
 						}
 						else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
 							// switch 2 has pushed
-							setpoint -= 10; // Move down 10 mm.
+
 						}
 						else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
 							// switch 3 has pushed
@@ -598,14 +610,14 @@ int main(void)
 			}
 
 			// Main controller loop
-			if(is_update_encoder == 1){
-				Update_qei(&encoder, &htim4);
+			if(is_update_encoder == 1 && !(state == 2)){
+				Update_qei(&encoder, &htim4); // Update encoder
 //				kalman_velocity = SteadyStateKalmanFilter(&kalman, ((float)pwm_signal * 24.0)/65535.0, encoder.radps / 2.0);
 //				kalman_velocity_z = kalman_velocity * 2.0 * 16.0 / (2.0 * M_PI);
-				Trajectory_Generator(&genScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk);
-				Trajectory_Evaluated(&genScurveData, &evaScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk);
-				setpoint_pos = evaScurveData.setposition;
-				setpoint_vel = evaScurveData.setvelocity;
+				Trajectory_Generator(&genScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Generate trajectory
+				Trajectory_Evaluated(&genScurveData, &evaScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Evaluate trajectory
+				setpoint_pos = evaScurveData.setposition; // Position set point
+				setpoint_vel = evaScurveData.setvelocity; // Feed forward velocity
 				if(start_position_control == 1){
 					Update_position_control(setpoint_pos);
 					start_position_control = 0;
@@ -615,7 +627,15 @@ int main(void)
 				Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, pwm_signal); // Update main PWM signal
 				is_update_encoder = 0;
 			}
+			if(!(state == 1 && state == 2 && state == 4 && state == 8 && state == 16)){
+				// Update peripheral
+				Vacuum_Status(&eff); // Vacuum
+				Gripper_Movement_Status(&eff); // End effector
+				// End effector update
+				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
+			}
 		}
+
 		if(mode == HOMING){
 			if(home.is_home == 1){
 				// Finish homing state
@@ -624,18 +644,20 @@ int main(void)
 				home.is_home = 0;
 				// Trajectory setup for hold position
 				initial_position = 0;
-				target_position = 0;
+				target_position = 10;
 				evaScurveData.t = 0;
 				// Change Mode
 				mode = RUNNING;
 			}
 		}
+
 		if(mode == EMERGENCY){
 			if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15) == 1){
 				HAL_GPIO_WritePin(emer_light_gpio, emer_light_pin, RESET);
 				mode = WAIT;
 			}
 		}
+
   }
   /* USER CODE END 3 */
 }
@@ -1163,7 +1185,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		static uint8_t test = 0;
 		if(test == 0){
 			target_position = 500.0;
-			initial_position = 0.0;
+			initial_position = encoder.mm;
 			evaScurveData.t = 0;
 			setpoint_pos = 0.0;
 			setpoint_vel = 0.0;
@@ -1172,7 +1194,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 		else if(test == 1){
 			initial_position = 500.0;
-			target_position = 0.0;
+			target_position = encoder.mm;
 			evaScurveData.t = 0;
 			setpoint_pos = 0.0;
 			setpoint_vel = 0.0;
@@ -1193,7 +1215,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 			Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, 0);
 			// Emergency light enable
 			HAL_GPIO_WritePin(emer_light_gpio, emer_light_pin, SET);
-	//		emer.emer_state = 1;
+			// Deactivate end effector
+			eff.solenoid_command[0] = 0;
+			eff.solenoid_command[1] = 0;
+			eff.solenoid_command[2] = 0;
+			Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
 			mode = EMERGENCY;
 		}
 	}
@@ -1213,7 +1239,7 @@ void Update_velocity_control(float s){
 void Update_position_control(float s){
 	//input is pulse unit
 	p_e = s - Get_mm(&encoder);
-	p_output = Update_pid(&p_pid, p_e, 1000.0, 1000.0);
+	p_output = Update_pid(&p_pid, p_e, 650.0, 650.0);
 }
 /* USER CODE END 4 */
 
