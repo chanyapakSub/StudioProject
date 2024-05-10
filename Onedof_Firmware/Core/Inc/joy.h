@@ -11,6 +11,8 @@
 #include "main.h"
 typedef struct{
 	uint8_t s_1, s_2, s_3, s_4;
+	uint8_t is_place;
+	uint16_t shelves_position[5];
 }JOY;
 
 void Update_joy(JOY *joy);

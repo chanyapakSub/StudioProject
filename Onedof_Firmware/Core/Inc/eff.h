@@ -12,7 +12,7 @@
 #include "ModBusRTU.h"
 
 typedef struct{
-	uint8_t actual_status[2];
+	uint8_t actual_status[2]; // 0 = Pull reed switch, 1 = Push reed switch
 	uint8_t solenoid_command[3]; // 0 = vacuum, 1 = push, 2 = pull
 	u16u8_t update_actual_status[200];
 } EFF;

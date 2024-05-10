@@ -13,15 +13,18 @@
 
 //INTEGRAL TERM IS USE BACKWARD EULER RULE
 typedef struct{
-	float32_t kp; //P GAIN FOR PID
-	float32_t ki; //I GAIN FOR PID
-	float32_t kd; //D GAIN FOR PID
-	float32_t sampt; //SAMPLING TIME
-	float32_t y_n; //Initial output
+	float kp; //P GAIN FOR PID
+	float ki; //I GAIN FOR PID
+	float kd; //D GAIN FOR PID
+	float sampt; //SAMPLING TIME
+	float y_n; //Initial output
+	float e_n; //Initial error
+	float e_n_1;
+	float e_n_2;
 
 } PID;
 
-void PID_init(PID* pid, float32_t _kp,  float32_t _ki, float32_t _kd, float32_t _sampt);
-int32_t Update_pid(PID *pid, float32_t error, float32_t pid_sat, float32_t plant_sat);
+void PID_init(PID* pid, float _kp,  float _ki, float _kd, float _sampt);
+float Update_pid(PID *pid, float error, float pid_sat, float plant_sat);
 void Reset_pid(PID* pid);
 #endif /* INC_PID_H_ */

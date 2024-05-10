@@ -54,8 +54,8 @@ float Kalman_Speed = 0;
 //arm_matrix_instance_f32 Velocity_matrix;
 
 
-float SteadyStateKalmanFilter(KalmanFilter* filter, float32_t Vin,float32_t Velocity){
-	  arm_mat_init_f32(&filter->Velocity_matrix, 1, 1,(float32_t*) &Velocity);
+float SteadyStateKalmanFilter(KalmanFilter* filter, float Vin,float Velocity){
+	  arm_mat_init_f32(&filter->Velocity_matrix, 1, 1,(float*) &Velocity);
 	  arm_mat_trans_f32(&filter->A_matrix, &filter->A_transpose_matrix);
 	  arm_mat_trans_f32(&filter->C_matrix, &filter->C_transpose_matrix);
 	  arm_mat_trans_f32(&filter->G_matrix, &filter->G_transpose_matrix);
@@ -94,8 +94,8 @@ float SteadyStateKalmanFilter(KalmanFilter* filter, float32_t Vin,float32_t Velo
 
 	  // Computation of the state covariance error
 	  arm_matrix_instance_f32 temp_matrix4;
-	  float32_t temp_data4[16];
-	  arm_mat_init_f32(&temp_matrix4, 4, 4,(float32_t*) &temp_data4);
+	  float temp_data4[16];
+	  arm_mat_init_f32(&temp_matrix4, 4, 4,(float*) &temp_data4);
 
 	  arm_mat_mult_f32(&filter->K_matrix, &filter->C_matrix, &temp_matrix4);				// K * C
 	  arm_mat_sub_f32(&filter->eye_matrix, &temp_matrix4, &temp_matrix4);			// (I - (K * C))
@@ -105,32 +105,32 @@ float SteadyStateKalmanFilter(KalmanFilter* filter, float32_t Vin,float32_t Velo
 }
 
 void Kalman_Start(KalmanFilter* filter){
-	filter->Q = 100.0f;
+	filter->Q = 0.1f;
 	filter->R[0] = 1.0f;
 
-	float32_t a[16] = {1.0f, 0.000999981278535715f, -0.000114956304180341f, 7.18067814869762e-06f,
+	float a[16] = {1.0f, 0.000999981278535715f, -0.000114956304180341f, 7.18067814869762e-06f,
 	                   0.0f, 0.999950617296464f,   -0.229910715302858f, 0.0143220709019020f,
 	                   0.0f, 0.0f   ,   1.0f  , 0.0f,
 	                   0.0f,-0.00496113160650046f, 0.000571883719539551f, 0.983689934032327f};
 
-	float32_t b[4] = {	1.90888950589463e-07f,
+	float b[4] = {	1.90888950589463e-07f,
 						0.000571883719539551f,
 						0.0f,
 						0.0789912369575374f};
 
-	float32_t c[4] = {0.0f, 1.0f, 0.0f, 0.0f};
+	float c[4] = {0.0f, 1.0f, 0.0f, 0.0f};
 
-	float32_t g[4] = {0.0f,
+	float g[4] = {0.0f,
 					  1.0f,
 					  0.0f,
 					  0.0f};
 
-	float32_t iden[16] = {1.0f, 0.0f, 0.0f, 0.0f,
+	float iden[16] = {1.0f, 0.0f, 0.0f, 0.0f,
 			  	  	 0.0f, 1.0f, 0.0f, 0.0f,
 					 0.0f, 0.0f, 1.0f, 0.0f,
 					 0.0f, 0.0f, 0.0f, 1.0f,};
 
-	float32_t x_k[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+	float x_k[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
 	filter->Es_velocity[1] = 0.0f;
 

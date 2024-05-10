@@ -24,11 +24,11 @@ extern uint8_t set_shelves_state;
 
 void Vacuum_Status(EFF* eff);
 void Gripper_Movement_Status(EFF* eff);
-void Set_Shelves();
+uint16_t Set_Shelves();
 uint16_t Set_Goal_Point();
 uint16_t Run_Point_Mode();
 void Set_Home();
 void SetPick_PlaceOrder();
-void Run_Jog_Mode();
+uint16_t Run_Jog_Mode();
 
 #endif /* INC_BASESYSTEM_H_ */

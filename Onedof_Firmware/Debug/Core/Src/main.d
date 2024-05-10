@@ -64,10 +64,11 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/quaternion_math_functions.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/window_functions.h \
  ../Core/Inc/kalman.h ../Core/Inc/main.h ../Core/Inc/pid.h \
- ../Core/Inc/qei.h ../Core/Inc/pwm.h ../Core/Inc/adc.h ../Core/Inc/joy.h \
- ../Core/Inc/eff.h ../Core/Inc/ModBusRTU.h ../Core/Inc/ModBusRTU.h \
- ../Core/Inc/Basesystem.h ../Core/Inc/eff.h ../Core/Inc/state.h \
- ../Core/Inc/pwm.h ../Core/Inc/Basesystem.h ../Core/Inc/qei.h
+ ../Core/Inc/qei.h ../Core/Inc/lowpass.h ../Core/Inc/pwm.h \
+ ../Core/Inc/adc.h ../Core/Inc/joy.h ../Core/Inc/eff.h \
+ ../Core/Inc/ModBusRTU.h ../Core/Inc/ModBusRTU.h ../Core/Inc/Basesystem.h \
+ ../Core/Inc/eff.h ../Core/Inc/state.h ../Core/Inc/pwm.h \
+ ../Core/Inc/Basesystem.h ../Core/Inc/qei.h ../Core/Inc/Scurve.h
 ../Core/Inc/main.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h:
 ../Core/Inc/stm32g4xx_hal_conf.h:
@@ -137,6 +138,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/main.h:
 ../Core/Inc/pid.h:
 ../Core/Inc/qei.h:
+../Core/Inc/lowpass.h:
 ../Core/Inc/pwm.h:
 ../Core/Inc/adc.h:
 ../Core/Inc/joy.h:
@@ -149,3 +151,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/pwm.h:
 ../Core/Inc/Basesystem.h:
 ../Core/Inc/qei.h:
+../Core/Inc/Scurve.h:

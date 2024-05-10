@@ -55,7 +55,7 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 					return;
 				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1 && home -> homing_ts >= 0 && home -> homing_ts < 1000){
 					// Move upper
-					home -> pwm = 200;
+					home -> pwm = 16000;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 200);
 				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_ts >= 1000 && home -> homing_ts < 2000){ // wait 1.0 secs
 					// Stop
@@ -63,7 +63,7 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 0);
 				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_ts >= 2000){ // wait 1.25 secs
 					// Move lower
-					home -> pwm = -120;
+					home -> pwm = -10000;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, -120);
 				}
 				home -> homing_ts++;
@@ -90,7 +90,7 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 					home -> homing_ts++;
 					if(home -> homing_ts >= 1000 && home -> homing_ts < 2000){ // wait 0.25 secs
 						 // Move upper
-						home -> pwm = 200;
+						home -> pwm = 16000;
 //						Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 200);
 					}
 				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1) && home -> homing_ts >= 2000 && home -> homing_ts < 3000){ // wait 0.5 secs
@@ -100,12 +100,12 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 					home -> homing_ts++;
 				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1) && home -> homing_ts >= 3000){ // wait 1.25 secs
 					// Move lower
-					home -> pwm = -120;
+					home -> pwm = -10000;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, -120);
 				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1)){
 					home -> homing_ts++;
 				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 0) && home -> homing_ts == 0){
-					home -> pwm = -120;
+					home -> pwm = -10000;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, -120); // Move lower
 				}else{
 					home -> homing_first = 1;
@@ -117,6 +117,14 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 	else{
 		return;
 	}
+}
+void Reset_homing(HOME* home){
+	home -> homing_command = 0;
+	home -> homing_first = 0;
+	home -> homing_ts = 0;
+	home -> is_home = 0;
+	home -> pwm = 0;
+	home -> state_check = 0;
 }
 
 void emer_init(EMER* emer){

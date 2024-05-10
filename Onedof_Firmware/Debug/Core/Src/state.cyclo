@@ -1,5 +1,6 @@
 ../Core/Src/state.c:9:6:point_init	1
 ../Core/Src/state.c:15:6:homing_init	1
 ../Core/Src/state.c:24:6:homing	38
-../Core/Src/state.c:122:6:emer_init	1
-../Core/Src/state.c:126:6:emergency	2
+../Core/Src/state.c:121:6:Reset_homing	1
+../Core/Src/state.c:130:6:emer_init	1
+../Core/Src/state.c:134:6:emergency	2

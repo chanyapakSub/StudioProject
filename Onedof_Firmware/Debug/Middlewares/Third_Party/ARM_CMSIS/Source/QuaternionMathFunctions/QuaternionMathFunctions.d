@@ -1,6 +1,6 @@
 Middlewares/Third_Party/ARM_CMSIS/Source/QuaternionMathFunctions/QuaternionMathFunctions.o: \
  ../Middlewares/Third_Party/ARM_CMSIS/Source/QuaternionMathFunctions/QuaternionMathFunctions.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_norm_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_norm_f32.c \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/quaternion_math_functions.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h \
  ../Drivers/CMSIS/Include/cmsis_compiler.h \
@@ -9,14 +9,14 @@ Middlewares/Third_Party/ARM_CMSIS/Source/QuaternionMathFunctions/QuaternionMathF
  ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/none.h \
  ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/utils.h \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_inverse_f32.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_conjugate_f32.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_normalize_f32.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_single_f32.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_f32.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion2rotation_f32.c \
- D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_rotation2quaternion_f32.c
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_norm_f32.c:
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_inverse_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_conjugate_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_normalize_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_single_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion2rotation_f32.c \
+ D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_rotation2quaternion_f32.c
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_norm_f32.c:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/quaternion_math_functions.h:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
@@ -25,10 +25,10 @@ D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFuncti
 ../Middlewares/Third_Party/ARM_CMSIS/Include/arm_math_types.h:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/none.h:
 ../Middlewares/Third_Party/ARM_CMSIS/Include/dsp/utils.h:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_inverse_f32.c:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_conjugate_f32.c:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_normalize_f32.c:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_single_f32.c:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_f32.c:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion2rotation_f32.c:
-D:/Electonic/micro/StudioProject-PID/Onedof_Firmware/Source/QuaternionMathFunctions/arm_rotation2quaternion_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_inverse_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_conjugate_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_normalize_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_single_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion_product_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_quaternion2rotation_f32.c:
+D:/HomeWork/FRA262/Firmware/StudioProject/Onedof_Firmware/Source/QuaternionMathFunctions/arm_rotation2quaternion_f32.c:

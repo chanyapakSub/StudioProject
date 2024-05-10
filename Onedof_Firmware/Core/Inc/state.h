@@ -41,6 +41,7 @@ void point_init(POINT* point);
 void run_point(POINT* point);
 void homing_init(HOME* home);
 void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox);
+void Reset_homing(HOME* home);
 void emer_init(EMER* emer);
 void emergency(EMER* emer, GPIO_TypeDef* GPIO_EmerLight, uint16_t GPIO_Pin_EmerLight);
 #endif /* INC_STATE_H_ */

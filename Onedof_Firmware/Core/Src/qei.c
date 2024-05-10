@@ -43,7 +43,7 @@ void Update_qei(QEI* qei, TIM_HandleTypeDef* htim){
 	}
 	// Update velocity at difference unit
 	qei -> pps = (float32_t)qei -> diff_counter_value * (float32_t)(qei -> freq);
-//	qei -> radps = qei -> pps * 2.0 * M_PI / (float)(qei -> ppr);
+	qei -> radps = qei -> pps * 2.0 * M_PI / (float)(qei -> ppr);
 //	qei -> rpm = qei -> pps * 60.0 / (float)(qei -> ppr) ;
 	qei -> mmps = qei -> pps * 16.0 / (float32_t)(qei -> ppr);
 
@@ -79,11 +79,13 @@ void Reset_qei(QEI* qei){
 	qei -> rpm = 0.0;
 	qei -> radps = 0.0;
 	qei -> mmps = 0.0;
-	qei -> radpss = 0.0;
+	qei -> ppss = 0;
 	qei -> rpms = 0.0;
+	qei -> radpss = 0.0;
 	qei -> mmpss = 0.0;
 	qei -> velocity_value[NEW] = 0;
 	qei -> velocity_value[OLD] = 0;
+	qei -> diff_velocity_value = 0;
 }
 
 float32_t Get_mmps(QEI* qei){

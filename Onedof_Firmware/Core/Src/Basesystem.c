@@ -27,50 +27,59 @@ ModbusHandleTypedef hmodbus;
 
 void Vacuum_Status(EFF* eff){
     //Vacuum On
-    if (registerFrame[0x02].U16 == 1){ // ใช้ == แทน =
+    if (registerFrame[0x02].U16 == 1){
         strcpy(Vacuum, "On");
         eff -> solenoid_command[0] = 1;
     }
     //Vacuum Off
-    else if (registerFrame[0x02].U16 == 0){ // ใช้ == แทน =
+    else if (registerFrame[0x02].U16 == 0){
         strcpy(Vacuum, "Off");
         eff -> solenoid_command[0] = 0;
     }
 }
 
 void Gripper_Movement_Status(EFF* eff){
-    //Movement Forward
-    if (registerFrame[0x03].U16 == 1){ // ใช้ == แทน =
+    //Movement Forward (push)
+    if (registerFrame[0x03].U16 == 1){
         strcpy(Gripper, "Forward");
-        eff -> solenoid_command[1] = 1;
-        eff -> solenoid_command[2] = 0;
+        // if pull reed switch is activate
+        if(eff -> actual_status[0] == 1 && eff -> actual_status[1] == 0){
+			eff -> solenoid_command[1] = 1;
+			eff -> solenoid_command[2] = 0;
+        }
+        // if push reed switch is activate
+        else if(eff -> actual_status[0] == 0 && eff -> actual_status[1] == 1){
+        	eff -> solenoid_command[1] = 0;
+			eff -> solenoid_command[2] = 0;
+        }
     }
-    //Movement Backward
-    else if (registerFrame[0x03].U16 == 0){ // ใช้ == แทน =
+    //Movement Backward (pull)
+    else if (registerFrame[0x03].U16 == 0){
         strcpy(Gripper, "Backward");
-        eff -> solenoid_command[1] = 0;
-        eff -> solenoid_command[2] = 1;
+        // if pull reed switch is activate
+        if(eff -> actual_status[0] == 1 && eff -> actual_status[1] == 0){
+			eff -> solenoid_command[1] = 0;
+			eff -> solenoid_command[2] = 0;
+        }
+        // if push reed switch is activate
+        else if(eff -> actual_status[0] == 0 && eff -> actual_status[1] == 1){
+        	eff -> solenoid_command[1] = 0;
+			eff -> solenoid_command[2] = 1;
+        }
     }
 }
 
-void Set_Shelves(){
-    //Set
-    if (registerFrame[0x01].U16 == 1){ // ใช้ == แทน =
+uint16_t Set_Shelves(){
+    //Set shelve
+    if (registerFrame[0x01].U16 == 1){
     	state = 1;
         strcpy(Shelves, "SET");
         registerFrame[0x01].U16 = 0;
         registerFrame[0x10].U16 = 1;
         set_shelves_state = 1;
-//        if(Jogging == 1){
-//            registerFrame[0x10].U16 = 0;
-//        }
+        return 1;
     }
-
-    registerFrame[0x23].U16 = 8;  //1st Shelve Position
-    registerFrame[0x24].U16 = 8;  //2nd Shelve Position
-    registerFrame[0x25].U16 = 8;  //3rd Shelve Position
-    registerFrame[0x26].U16 = 8;  //4th Shelve Position
-    registerFrame[0x27].U16 = 8;  //5th Shelve Position
+    else{return 0;}
 }
 
 // wait for Data type check
@@ -147,23 +156,25 @@ void SetPick_PlaceOrder() {
 
 
 
-void Run_Jog_Mode() {
+uint16_t Run_Jog_Mode() {
 	if (registerFrame[0x01].U16 == 1) {
 		strcpy(Jogmode, "Run Jog Mode");
 		registerFrame[0x01].U16 = 0;
-		for (int i = 0; i < 5; i++) {
-			state = 4;
-			strcpy(Jogmode, "Go to Pick...");
-			registerFrame[0x10].U16 = 4;
-			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
-
-			state = 8;
-			strcpy(Jogmode, "Go to Place...");
-			registerFrame[0x10].U16 = 8;
-			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
-		}
+		return 1;
+//		for (int i = 0; i < 5; i++) {
+//			state = 4;
+//			strcpy(Jogmode, "Go to Pick...");
+//			registerFrame[0x10].U16 = 4;
+//			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
+//
+//			state = 8;
+//			strcpy(Jogmode, "Go to Place...");
+//			registerFrame[0x10].U16 = 8;
+//			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
+//		}
 	}
-	registerFrame[0x10].U16 = 0;
+	else{return 0;}
+//	registerFrame[0x10].U16 = 0;
 }
 
 #endif /* SRC_BASESYSTEM_C_ */
