@@ -18,6 +18,7 @@ void homing_init(HOME* home){
 	home -> homing_state[1] = 0;
 	home -> is_home = 0;
 	home -> homing_first = 0;
+	home -> homing_sec = 0;
 	home -> homing_ts = 0;
 	home -> pwm = 0;
 }
@@ -29,87 +30,106 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 			// Homing state selection
 			// Robot is not home but proximity is detecting
 			if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1) && home -> is_home == 0){
-				home -> homing_state[1] = 2;
+				home -> homing_state[1] = 1;
 			}
 			// Robot is not home and proximity isn't detecting
 			else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && home -> is_home == 0){
-				home -> homing_state[1] = 3;
+				home -> homing_state[1] = 2;
 			}
-			// Set homing state
-			home -> homing_state[0] = 1;
+			if(home -> homing_state[1] != 0){
+				// Set homing state
+				home -> homing_state[0] = 1;
+			}
 		}
 		if(home -> homing_state[0] == 1){
 			// Homing
-			if(home -> homing_state[1] == 2){
+			if(home -> homing_state[1] == 1){
 //				home -> state_check += 10;
-				if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1 && home -> homing_ts > 2000){
-					// Stop when proximity was detected
+				if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_first == 1 && home -> homing_sec == 1){
 					home -> pwm = 0;
-//					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 0);
 					// Reset homing state and other
 					home -> homing_ts = 0;
 					home -> homing_state[0] = 0;
 					home -> homing_state[1] = 0;
 					home -> homing_command = 0;
+					home -> homing_first = 0;
+					home -> homing_sec = 0;
 					home -> is_home = 1;
 					return;
-				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1 && home -> homing_ts >= 0 && home -> homing_ts < 1000){
+				}
+				else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1 && home -> homing_first == 1 && home -> homing_sec == 0 && home -> homing_ts >= 1500){
+					// Stop when proximity was detected
+					home -> pwm = 14000;
+					home -> homing_sec = 1;
+				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1 && home -> homing_first == 0 && home -> homing_ts >= 0 && home -> homing_ts < 1000){
 					// Move upper
-					home -> pwm = 16000;
+					home -> pwm = 14000;
+					home -> homing_first = 1;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 200);
-				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_ts >= 1000 && home -> homing_ts < 2000){ // wait 1.0 secs
+				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_ts >= 1000 && home -> homing_ts < 1500){ // wait 1.0 secs
 					// Stop
 					home -> pwm = 0;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 0);
-				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_ts >= 2000){ // wait 1.25 secs
+				}else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_ts >= 1500){ // wait 1.25 secs
 					// Move lower
-					home -> pwm = -10000;
+					home -> pwm = -6000;
 //					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, -120);
 				}
 				home -> homing_ts++;
 			}
-			else if(home -> homing_state[1] == 3){
-				if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1) && (home -> homing_first == 1)){
-					// Stop when proximity was detected
+			else if(home -> homing_state[1] == 2){
+				if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_first == 1 && home -> homing_sec == 1){
 					home -> pwm = 0;
-//					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 0);
 					// Reset homing state and other
 					home -> homing_ts = 0;
-					home -> homing_first = 0;
 					home -> homing_state[0] = 0;
 					home -> homing_state[1] = 0;
 					home -> homing_command = 0;
+					home -> homing_first = 0;
 					home -> is_home = 1;
 					return;
-				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1) && (home -> homing_first == 0)){
+				}
+				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1) && (home -> homing_first == 1) && (home -> homing_sec == 0)){
+					// Stop when proximity was detected
+					static uint8_t for_one = 1;
+					if(home -> homing_sec == 0 && for_one == 1){
+						home -> pwm = 0;
+						home -> homing_ts = 0;
+						for_one = 0;
+					}
+					if(home -> homing_ts >= 1000){
+						// Stop for 1 sec then move upper
+						home -> pwm = 14000;
+						home -> homing_sec = 1;
+						for_one = 1;
+					}
+				}
+				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1) && (home -> homing_first == 0) && (home -> homing_sec == 0)){
 					// Stop when proximity was detected
 					if(home -> homing_ts == 0){
 						home -> pwm = 0;
-//						Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 0);
 					}
-					home -> homing_ts++;
-					if(home -> homing_ts >= 1000 && home -> homing_ts < 2000){ // wait 0.25 secs
+					if(home -> homing_ts >= 1000){ // stop 1 secs
 						 // Move upper
-						home -> pwm = 16000;
-//						Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 200);
+						home -> pwm = 14000;
 					}
-				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1) && home -> homing_ts >= 2000 && home -> homing_ts < 3000){ // wait 0.5 secs
-					// Stop
-					home -> pwm = 0;
-//					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, 0);
-					home -> homing_ts++;
-				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1) && home -> homing_ts >= 3000){ // wait 1.25 secs
-					// Move lower
-					home -> pwm = -10000;
-//					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, -120);
-				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1)){
-					home -> homing_ts++;
-				}else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 0) && home -> homing_ts == 0){
-					home -> pwm = -10000;
-//					Update_pwm(htim, htim_channel, GPIO_PWM, GPIO_Pin_PWM, -120); // Move lower
-				}else{
+				}
+				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 0) && (home -> homing_sec == 0) && (home -> homing_ts >= 1000)){
 					home -> homing_first = 1;
 				}
+				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1) && (home -> homing_sec == 0) && home -> homing_ts >= 1500 && home -> homing_ts < 2500){
+					// Move upper for 0.5 sec then stop
+					home -> pwm = 0;
+				}
+				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 1) && (home -> homing_sec == 0) && home -> homing_ts >= 2500){ // wait 1.25 secs
+					// After stop for 1 sec Move lower
+					home -> pwm = -6000;
+				}
+				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0) && (home -> homing_first == 0) && (home -> homing_sec == 0) && home -> homing_ts == 0){
+					home -> pwm = -6000;
+					return;
+				}
+				home -> homing_ts++;
 			}
 		}
 	}
@@ -119,8 +139,11 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 	}
 }
 void Reset_homing(HOME* home){
+	home -> homing_state[0] = 0;
+	home -> homing_state[1] = 0;
 	home -> homing_command = 0;
 	home -> homing_first = 0;
+	home -> homing_sec = 0;
 	home -> homing_ts = 0;
 	home -> is_home = 0;
 	home -> pwm = 0;

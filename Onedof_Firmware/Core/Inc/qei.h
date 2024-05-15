@@ -11,6 +11,7 @@
 #include "math.h"
 #include "arm_math.h"
 #include "main.h"
+#include "stm32g4xx_hal_tim.h"
 
 //VARIABLE SETTING
 typedef struct{
@@ -20,19 +21,19 @@ typedef struct{
 	uint32_t counter_value[2]; // COUNTER VALUE NEW & OLD
 	int32_t diff_counter_value; // DIFFERNCE OF NEW & OLD VALUE OF COUNTER
 	int64_t pulse; // POSITION AT PULSE UNIT
-	float32_t rev; // POSITION AT REVOLUTION UNIT
-	float32_t rad; // POSITION AT RADIANT UNIT
-	float32_t mm; // POSITION AT MILLIMETER UNIT
-	float32_t pps; // POSITION AT PULSE UNIT
-	float32_t rpm; // POSITION AT PULSE UNIT
-	float32_t radps; // POSITION AT PULSE UNIT
-	float32_t mmps; // POSITION AT MILLIMETER UNIT
-	float32_t velocity_value[2];
-	float32_t diff_velocity_value;
-	float32_t ppss;
-	float32_t radpss;
-	float32_t rpms;
-	float32_t mmpss; //AC AT MILLIMETER UNIT
+	double rev; // POSITION AT REVOLUTION UNIT
+	double rad; // POSITION AT RADIANT UNIT
+	double mm; // POSITION AT MILLIMETER UNIT
+	int64_t pps; // POSITION AT PULSE UNIT
+	double rpm; // POSITION AT PULSE UNIT
+	double radps; // POSITION AT PULSE UNIT
+	double mmps; // POSITION AT MILLIMETER UNIT
+	double velocity_value[2];
+	double diff_velocity_value;
+	double ppss;
+	double radpss;
+	double rpms;
+	double mmpss; //AC AT MILLIMETER UNIT
 } QEI;
 enum{
 	NEW,OLD
@@ -41,8 +42,8 @@ enum{
 //FUNCTION SETTING
 void QEI_init(QEI* qei, int32_t ppr, int32_t freq, int32_t period);
 void Update_qei(QEI* qei, TIM_HandleTypeDef* htim);
-void Reset_qei(QEI* qei);
-float32_t Get_mm(QEI* qei);
-float32_t Get_mmps(QEI* qei);
+void Reset_qei(QEI* qei, TIM_HandleTypeDef* htim);
+double Get_mm(QEI* qei);
+double Get_mmps(QEI* qei);
 
 #endif /* INC_QEI_H_ */

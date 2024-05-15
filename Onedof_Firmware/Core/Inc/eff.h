@@ -13,7 +13,7 @@
 
 typedef struct{
 	uint8_t actual_status[2]; // 0 = Pull reed switch, 1 = Push reed switch
-	uint8_t solenoid_command[3]; // 0 = vacuum, 1 = push, 2 = pull
+	uint8_t solenoid_command[3]; // 0 = vacuum, 1 = pull, 2 = push
 	u16u8_t update_actual_status[200];
 } EFF;
 

@@ -1,1 +1,2 @@
 ../Core/Src/lowpass.c:8:6:Update_lowpass	32	static
+../Core/Src/lowpass.c:23:6:Reset_lowpass	16	static

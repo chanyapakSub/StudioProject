@@ -27,6 +27,7 @@ typedef struct{
 	uint8_t homing_command;
 	uint8_t is_home;
 	uint8_t homing_first;
+	uint8_t homing_sec;
 	uint8_t state_check;
 	uint64_t homing_ts;
 	int16_t pwm;

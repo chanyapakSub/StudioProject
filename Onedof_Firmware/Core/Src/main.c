@@ -129,7 +129,7 @@ uint8_t first_check = 1;
 
 
 // Set point
-float setpoint = 0;
+double setpoint = 0.0;
 
 // State
 enum{
@@ -138,15 +138,14 @@ enum{
 uint8_t jog_status[2] = {0}; // For jog mode only 0 for pick 1 for place
 uint16_t mode = WAIT; /* For select mode from base system mode == 0 for stand by ,mode == 1 run point mode,
  	 	 	 	 	 mode == 2 run set shelve ,mode == 3 run jog mode(Full automatic pick & place)*/
-uint8_t ready = 1;
+uint8_t ready = 0;
 POINT point;
 HOME home;
 EMER emer;
-uint8_t testing = 1; // Testing mode or Not testing mode
+uint8_t testing = 0; // Testing mode or Not testing mode
 
 // Modbus
-u16u8_t registerFrame[200];
-uint8_t heartbeat_status = 0;
+u16u8_t registerFrame[200] = {0};
 
 // End effector
 EFF eff;
@@ -154,13 +153,6 @@ EFF eff;
 // Joy
 JOY joy;
 int32_t jog = 0;
-
-// Homing
-uint64_t homing_ts = 0; // delay time for 2nd homing
-uint8_t homing_first = 1; // Homing first status
-uint8_t homing_second = 0; // Homing 2nd status
-//uint8_t homing = 0; // Homing status
-uint8_t is_home = 0; // Is robot home
 
 // Current sensor
 ADC current_sensor;
@@ -180,19 +172,25 @@ LOWPASS lowpass;
 
 // Velocity pid
 PID v_pid;
-float v_kp = 18.0;
-float v_ki = 1.75;
-float v_kd = 0.0;
-float v_e = 0.0;
+float v_kp_u = 3.1;
+float v_ki_u = 0.0001;
+float v_kd_u = 0.0;
+float v_kp_d = 2.2;
+float v_ki_d = 0.0002;
+float v_kd_d = 0.0;
+double v_e = 0.0;
 int32_t v_output = 0;
 
 // Position pid
 PID p_pid;
-float p_kp = 1.0;
-float p_ki = 0.0;
-float p_kd = 0.0;
-float p_e = 0.0;
-float p_output = 0;
+float p_kp_u = 0.0;
+float p_ki_u = 0.0;
+float p_kd_u = 0.0;
+float p_kp_d = 0.0;
+float p_ki_d = 0.0;
+float p_kd_d = 0.0;
+double p_e = 0.0;
+double p_output = 0;
 uint8_t start_position_control = 0;
 
 // Kalman filter
@@ -210,11 +208,11 @@ float x_axis_position = 0.0;
 // Trajectory
 volatile Scurve_GenStruct genScurveData;
 volatile Scurve_EvaStruct evaScurveData;
-float initial_position = 0.0;
-float target_position = 500.0;
-float max_velocity = 650.0;
-float max_acceleration = 1000.0;
-float max_jerk = 500.0;
+double initial_position = 0.0;
+double target_position = 0.0;
+double max_velocity = 650.0;
+double max_acceleration = 800.0;
+double max_jerk = 400.0;
 double setpoint_pos = 0.0;
 double setpoint_vel = 0.0;
 
@@ -231,9 +229,10 @@ static void MX_ADC1_Init(void);
 static void MX_TIM16_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void Update_torque_control(float s);
-void Update_velocity_control(float s);
-void Update_position_control(float s);
+void Update_torque_control(double s);
+void Update_velocity_control(double s);
+void Update_position_control(double s);
+void Reset_main_variable();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -310,8 +309,8 @@ int main(void)
 
 
   // PID initialize
-  PID_init(&p_pid, p_kp, p_ki, p_kd, 0.005);
-  PID_init(&v_pid, v_kp, v_ki, v_kd, 0.001);
+  PID_init(&p_pid, p_kp_u, p_ki_u, p_kd_u, p_kp_d, p_ki_d, p_kd_d);
+  PID_init(&v_pid, v_kp_u, v_ki_u, v_kd_u, v_kp_d, v_ki_d, v_kd_d);
 
   //Set point
   setpoint = 0.0;
@@ -348,6 +347,7 @@ int main(void)
 		}
 
 		if(mode == WAIT){
+
 			// Update peripheral
 			Vacuum_Status(&eff); // Vacuum
 			Gripper_Movement_Status(&eff); // End effector
@@ -362,25 +362,16 @@ int main(void)
 					home.homing_command = 1;
 					registerFrame[0x01].U16 = 0b0000; // Reset data of base system status
 					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
+					state = registerFrame[0x10].U16;
+					mode = HOMING;
 				}
 				else if(HAL_GPIO_ReadPin(home_gpio, home_pin) == 1){
 					// Have command from home switch
 					home.homing_command = 1;
-//					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
+					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
+					state = registerFrame[0x10].U16;
+					mode = HOMING;
 				}
-			}
-			if(home.homing_command == 1 && eff.actual_status[0] == 1 && eff.actual_status[1] == 0){
-				eff.solenoid_command[0] = 0;
-				eff.solenoid_command[1] = 0;
-				eff.solenoid_command[2] = 0;
-				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
-				mode = HOMING;
-			}
-			else if(home.homing_command == 1 && eff.actual_status[0] == 0 && eff.actual_status[1] == 1){
-				eff.solenoid_command[0] = 0;
-				eff.solenoid_command[1] = 0;
-				eff.solenoid_command[2] = 1;
-				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
 			}
 			else{
 				// Nothing happen
@@ -389,34 +380,44 @@ int main(void)
 			}
 		}
 
+
 		if(mode == RUNNING){
 			if(testing == 1){
+				Update_qei(&encoder, &htim4);
+				Update_lowpass(&lowpass, encoder.mmps);
 				sensor[0] = __HAL_TIM_GET_COUNTER(&encoder_tim); // Encoder
 				sensor[1] = HAL_GPIO_ReadPin(proximity_gpio, proximity_pin); // Proximity
 				sensor[2] = HAL_GPIO_ReadPin(reed_pull_gpio, reed_pull_pin); // Reed switch pull
 				sensor[3] = HAL_GPIO_ReadPin(reed_push_gpio, reed_push_pin); // Reed switch push
 				sensor[4] = HAL_GPIO_ReadPin(emer_gpio, emer_pin); // Emergency button
 				sensor[5] = HAL_GPIO_ReadPin(home_gpio, home_pin); // Home button
-				static uint64_t timestamp = 0;
-				if(HAL_GetTick() >= timestamp + 1500){
-					eff.solenoid_command[0] = 1;
-					eff.solenoid_command[1] = 1;
-					eff.solenoid_command[2] = 0;
-					timestamp = HAL_GetTick() + 1500;
-				}
-				else if(HAL_GetTick() > timestamp){
-					eff.solenoid_command[0] = 0;
-					eff.solenoid_command[1] = 0;
-					eff.solenoid_command[2] = 1;
-				}
+				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
 			}
 			else if(testing == 0){
+				// Main controller loop
+				if(is_update_encoder == 1 && !(state == 2)){
+					Update_qei(&encoder, &htim4); // Update encoder
+//					kalman_velocity = SteadyStateKalmanFilter(&kalman, ((float)pwm_signal * 24.0)/65535.0, encoder.radps / 2.0);
+//					kalman_velocity_z = kalman_velocity * 2.0 * 16.0 / (2.0 * M_PI);
+					Update_lowpass(&lowpass, encoder.mmps);
+//
+//					Trajectory_Generator(&genScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Generate trajectory
+//					Trajectory_Evaluated(&genScurveData, &evaScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Evaluate trajectory
+//					setpoint_pos = evaScurveData.setposition; // Position set point
+//					setpoint_vel = evaScurveData.setvelocity; // Feed forward velocity
+//
+////					Update_position_control(setpoint_pos);
+//					Update_velocity_control(setpoint_vel + p_output);
+//					pwm_signal = v_output;
+//					Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, pwm_signal); // Update main PWM signal
+					is_update_encoder = 0;
+				}
 				// Check command from base system status
 				//  homing command from Homing button and Base system Check command
 				Set_Home(); // Refresh homing command from base system
 				if(state == 0b0010){
 					// Have command from base system
-					mode = WAIT; // Go to wait mode for Deactivate end effector
+					mode = HOMING; // Go to wait mode for Deactivate end effector
 					home.homing_command = 1;
 					registerFrame[0x01].U16 = 0b0000; // Reset data of base system status
 					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
@@ -424,233 +425,210 @@ int main(void)
 				}
 				else if(HAL_GPIO_ReadPin(home_gpio, home_pin) == 1){
 					// Have command from home switch
-					mode = WAIT;// Go to wait mode for Deactivate end effector
+					mode = HOMING;// Go to wait mode for Deactivate end effector
 					home.homing_command = 1;
 					registerFrame[0x10].U16 = 0b0010; // Set data of moving status to Home
 					state = registerFrame[0x10].U16 = 0b0010;
 				}
-
-				// Go point command from base system
-				else if(Run_Point_Mode() == 1){
-					setpoint = Set_Goal_Point();
-					ready = 1;
-				}
-				// Set shelves command from base system
-				else if(Set_Shelves() == 1){
-					joy.shelves_position[0] = 0;
-					joy.shelves_position[1] = 0;
-					joy.shelves_position[2] = 0;
-					joy.shelves_position[3] = 0;
-					joy.shelves_position[4] = 0;
-					ready = 1;
-				}
-				// Run jog mode from base system
-				else if(Run_Jog_Mode() == 1){
-					SetPick_PlaceOrder();
-					jog_status[0] = 1; // Go pick first
-					jog_status[1] = 0;
-					state = 4;
-					strcpy(Jogmode, "Go to Pick...");
-					registerFrame[0x10].U16 = state;
-					ready = 1;
-				}
-
-				// Check state from z moving status
-				// Set shelve
-				if(state == 1){
-					if(ready == 1){
-						static uint8_t i = 0;
-						// Update joy stick command
-						Update_joy(&joy);
-						if(i > 4){
-							registerFrame[0x23].U16 = joy.shelves_position[0];  //1st Shelve Position
-							registerFrame[0x24].U16 = joy.shelves_position[1];  //2nd Shelve Position
-							registerFrame[0x25].U16 = joy.shelves_position[2];  //3rd Shelve Position
-							registerFrame[0x26].U16 = joy.shelves_position[3];  //4th Shelve Position
-							registerFrame[0x27].U16 = joy.shelves_position[4];  //5th Shelve Position
-							state = 0b0000;
-							registerFrame[0x10].U16 = state;
-							ready = 0;
-							i = 0;
-						}
-						else if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
-							if(joy.is_place == 1){
-								if(joy.is_place == 0){
-									setpoint = 20.0;
-									initial_position = encoder.mm;
-									target_position = initial_position + setpoint;
-									evaScurveData.t = 0;
-								}
-							}
-						}
-						else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
-							// switch 2 has pushed
-
-						}
-						else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
-							// switch 3 has pushed
-							// save data for base system
-							if(joy.is_place == 1){
-								if(joy.is_place == 0){
-									joy.shelves_position[i] = (uint16_t)(encoder.mm * 10);
-									i++;
-								}
-							}
-						}
-						else if (joy.s_1 && joy.s_2 && joy.s_3 && !joy.s_4){
-							// switch 4 has pushed
-							if(joy.is_place == 1){
-								if(joy.is_place == 0){
-									setpoint = -20.0;
-									initial_position = encoder.mm;
-									target_position = initial_position + setpoint;
-									evaScurveData.t = 0;
-								}
-							}
-						}
-					}
-				}
-				// Go pick
-				else if(state == 4){
-					if(ready == 1){
-						static uint8_t j = 0;
-						if(j > 4){
-							j = 0;
-						}
-
-						// Set up trajectory
-						initial_position = encoder.mm;
-						target_position = (float)(joy.shelves_position[Pick[j]]) / 10.0;
-						evaScurveData.t = 0;
-						ready = 0;
-						j++;
-					}
-					else if(ready == 0){
-						if(evaScurveData.isFinised == true){
-							if((eff.actual_status[0] == 1) && (eff.actual_status[1] == 0)){
-								// End effector is pull
-								eff.solenoid_command[0] = 1;
-								eff.solenoid_command[1] = 1; // Push forward
-								eff.solenoid_command[2] = 0;
-							}
-							if((eff.actual_status[0] == 0) && (eff.actual_status[1] == 1)){
-								// End effector is push
-								eff.solenoid_command[0] = 1;
-								eff.solenoid_command[1] = 0;
-								eff.solenoid_command[2] = 1; // Pull back
-								ready = 1;
-								state = 8; // Then go place
-								registerFrame[0x10].U16 = state;
-							}
-							if((ready == 1) && (state == 8)){
-								// Deactivate solenoid valve
-								eff.solenoid_command[1] = 0;
-								eff.solenoid_command[2] = 0;
-							}
-						}
-					}
-				}
-				// Go place
-				else if(state == 8){
-					if(ready == 1){
-						static uint8_t k = 0;
-						if(k > 4){
-							k = 0;
-							state = 0b0000;
-							registerFrame[0x10].U16 = state;
-							ready = 0;
-						}
-
-						// Set up trajectory
-						initial_position = encoder.mm;
-						target_position = (float)(joy.shelves_position[Place[k]]) / 10.0;
-						evaScurveData.t = 0;
-						ready = 0;
-						k++;
-					}
-					else if(ready == 0){
-						if(evaScurveData.isFinised == true){
-							if((eff.actual_status[0] == 1) && (eff.actual_status[1] == 0)){
-								// End effector is pull
-								eff.solenoid_command[0] = 1;
-								eff.solenoid_command[1] = 1; // Push forward
-								eff.solenoid_command[2] = 0;
-							}
-							if((eff.actual_status[0] == 0) && (eff.actual_status[1] == 1)){
-								// End effector is push
-								eff.solenoid_command[0] = 0;
-								eff.solenoid_command[1] = 0;
-								eff.solenoid_command[2] = 1; // Pull back
-								ready = 1;
-								state = 4; // Then go place
-								registerFrame[0x10].U16 = state;
-							}
-							if((ready == 1) && (state == 4)){
-								// Deactivate solenoid valve
-								eff.solenoid_command[0] = 0;
-								eff.solenoid_command[1] = 0;
-								eff.solenoid_command[2] = 0;
-							}
-						}
-					}
-				}
-				// Run point mode
-				else if(state == 16){
-					if(ready == 1){
-						initial_position = encoder.mm;
-						target_position = setpoint;
-						evaScurveData.t = 0;
-						ready = 0;
-					}
-					else if((evaScurveData.isFinised == true) && (ready == 0)){
-						state = 0b0000;
-						registerFrame[0x10].U16 = state;
-					}
-				}
+//				// Go point command from base system
+//				else if(Run_Point_Mode() == 1){
+//					setpoint = Set_Goal_Point();
+//					ready = 1;
+//				}
+//				// Set shelves command from base system
+//				else if(Set_Shelves() == 1){
+//					joy.shelves_position[0] = 0;
+//					joy.shelves_position[1] = 0;
+//					joy.shelves_position[2] = 0;
+//					joy.shelves_position[3] = 0;
+//					joy.shelves_position[4] = 0;
+//					ready = 1;
+//				}
+//				// Run jog mode from base system
+//				else if(Run_Jog_Mode() == 1){
+//					SetPick_PlaceOrder();
+//					jog_status[0] = 1; // Go pick first
+//					jog_status[1] = 0;
+//					state = 4;
+//					strcpy(Jogmode, "Go to Pick...");
+//					registerFrame[0x10].U16 = state;
+//					ready = 1;
+//				}
+//
+//				// Check state from z moving status
+//				// Set shelve
+//				if(state == 1){
+//					if(ready == 1){
+//						static uint8_t i = 0;
+//						// Update joy stick command
+//						Update_joy(&joy);
+//						if(i > 4){
+//							registerFrame[0x23].U16 = joy.shelves_position[0];  //1st Shelve Position
+//							registerFrame[0x24].U16 = joy.shelves_position[1];  //2nd Shelve Position
+//							registerFrame[0x25].U16 = joy.shelves_position[2];  //3rd Shelve Position
+//							registerFrame[0x26].U16 = joy.shelves_position[3];  //4th Shelve Position
+//							registerFrame[0x27].U16 = joy.shelves_position[4];  //5th Shelve Position
+//							state = 0b0000;
+//							registerFrame[0x10].U16 = state;
+//							ready = 0;
+//							i = 0;
+//						}
+//						else if (!joy.s_1 && joy.s_2 && joy.s_3 && joy.s_4){
+//							if(joy.is_place == 1){
+//								if(joy.is_place == 0){
+//									setpoint = 20.0;
+//									initial_position = encoder.mm;
+//									target_position = initial_position + setpoint;
+//									evaScurveData.t = 0;
+//								}
+//							}
+//						}
+//						else if (joy.s_1 && !joy.s_2 && joy.s_3 && joy.s_4){
+//							// switch 2 has pushed
+//
+//						}
+//						else if (joy.s_1 && joy.s_2 && !joy.s_3 && joy.s_4){
+//							// switch 3 has pushed
+//							// save data for base system
+//							if(joy.is_place == 1){
+//								if(joy.is_place == 0){
+//									joy.shelves_position[i] = (uint16_t)(encoder.mm * 10);
+//									i++;
+//								}
+//							}
+//						}
+//						else if (joy.s_1 && joy.s_2 && joy.s_3 && !joy.s_4){
+//							// switch 4 has pushed
+//							if(joy.is_place == 1){
+//								if(joy.is_place == 0){
+//									setpoint = -20.0;
+//									initial_position = encoder.mm;
+//									target_position = initial_position + setpoint;
+//									evaScurveData.t = 0;
+//								}
+//							}
+//						}
+//					}
+//				}
+//				// Go pick
+//				else if(state == 4){
+//					if(ready == 1){
+//						static uint8_t j = 0;
+//						if(j > 4){
+//							j = 0;
+//						}
+//
+//						// Set up trajectory
+//						initial_position = encoder.mm;
+//						target_position = (float)(joy.shelves_position[Pick[j]]) / 10.0;
+//						evaScurveData.t = 0;
+//						ready = 0;
+//						j++;
+//					}
+//					else if(ready == 0){
+//						if(evaScurveData.isFinised == true){
+//							if((eff.actual_status[0] == 1) && (eff.actual_status[1] == 0)){
+//								// End effector is pull
+//								eff.solenoid_command[0] = 1;
+//								eff.solenoid_command[1] = 1; // Push forward
+//								eff.solenoid_command[2] = 0;
+//							}
+//							if((eff.actual_status[0] == 0) && (eff.actual_status[1] == 1)){
+//								// End effector is push
+//								eff.solenoid_command[0] = 1;
+//								eff.solenoid_command[1] = 0;
+//								eff.solenoid_command[2] = 1; // Pull back
+//								ready = 1;
+//								state = 8; // Then go place
+//								registerFrame[0x10].U16 = state;
+//							}
+//							if((ready == 1) && (state == 8)){
+//								// Deactivate solenoid valve
+//								eff.solenoid_command[1] = 0;
+//								eff.solenoid_command[2] = 0;
+//							}
+//						}
+//					}
+//				}
+//				// Go place
+//				else if(state == 8){
+//					if(ready == 1){
+//						static uint8_t k = 0;
+//						if(k > 4){
+//							k = 0;
+//							state = 0b0000;
+//							registerFrame[0x10].U16 = state;
+//							ready = 0;
+//						}
+//
+//						// Set up trajectory
+//						initial_position = encoder.mm;
+//						target_position = (float)(joy.shelves_position[Place[k]]) / 10.0;
+//						evaScurveData.t = 0;
+//						ready = 0;
+//						k++;
+//					}
+//					else if(ready == 0){
+//						if(evaScurveData.isFinised == true){
+//							if((eff.actual_status[0] == 1) && (eff.actual_status[1] == 0)){
+//								// End effector is pull
+//								eff.solenoid_command[0] = 1;
+//								eff.solenoid_command[1] = 1; // Push forward
+//								eff.solenoid_command[2] = 0;
+//							}
+//							if((eff.actual_status[0] == 0) && (eff.actual_status[1] == 1)){
+//								// End effector is push
+//								eff.solenoid_command[0] = 0;
+//								eff.solenoid_command[1] = 0;
+//								eff.solenoid_command[2] = 1; // Pull back
+//								ready = 1;
+//								state = 4; // Then go place
+//								registerFrame[0x10].U16 = state;
+//							}
+//							if((ready == 1) && (state == 4)){
+//								// Deactivate solenoid valve
+//								eff.solenoid_command[0] = 0;
+//								eff.solenoid_command[1] = 0;
+//								eff.solenoid_command[2] = 0;
+//							}
+//						}
+//					}
+//				}
+//				// Run point mode
+//				else if(state == 16){
+//					if(ready == 1){
+//						initial_position = encoder.mm;
+//						target_position = setpoint;
+//						evaScurveData.t = 0;
+//						ready = 0;
+//					}
+//					else if((evaScurveData.isFinised == true) && (ready == 0)){
+//						state = 0b0000;
+//						registerFrame[0x10].U16 = state;
+//					}
+//				}
 			}
 
-			// Main controller loop
-			if(is_update_encoder == 1 && !(state == 2)){
-				Update_qei(&encoder, &htim4); // Update encoder
-//				kalman_velocity = SteadyStateKalmanFilter(&kalman, ((float)pwm_signal * 24.0)/65535.0, encoder.radps / 2.0);
-//				kalman_velocity_z = kalman_velocity * 2.0 * 16.0 / (2.0 * M_PI);
-				Trajectory_Generator(&genScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Generate trajectory
-				Trajectory_Evaluated(&genScurveData, &evaScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Evaluate trajectory
-				setpoint_pos = evaScurveData.setposition; // Position set point
-				setpoint_vel = evaScurveData.setvelocity; // Feed forward velocity
-				if(start_position_control == 1){
-					Update_position_control(setpoint_pos);
-					start_position_control = 0;
-				}
-				Update_velocity_control(setpoint_vel + p_output);
-				pwm_signal = v_output;
-				Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, pwm_signal); // Update main PWM signal
-				is_update_encoder = 0;
-			}
-			if(!(state == 1 && state == 2 && state == 4 && state == 8 && state == 16)){
-				// Update peripheral
-				Vacuum_Status(&eff); // Vacuum
-				Gripper_Movement_Status(&eff); // End effector
-				// End effector update
-				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
-			}
+//			if(!(state == 1 && state == 2 && state == 4 && state == 8 && state == 16)){
+//				// Update peripheral
+//				Vacuum_Status(&eff); // Vacuum
+//				Gripper_Movement_Status(&eff); // End effector
+//				// End effector update
+//				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
+//			}
 		}
-
 		if(mode == HOMING){
 			if(home.is_home == 1){
 				// Finish homing state
-				Reset_qei(&encoder); // Reset encoder data
-				registerFrame[0x10].U16 = 0b0000; // Reset data of moving status
 				home.is_home = 0;
-				// Trajectory setup for hold position
-				initial_position = 0;
-				target_position = 10;
-				evaScurveData.t = 0;
+				registerFrame[0x10].U16 = 0b0000; // Reset data of moving status
+				state = registerFrame[0x10].U16;
+
+				Reset_main_variable();
 				// Change Mode
 				mode = RUNNING;
 			}
 		}
-
 		if(mode == EMERGENCY){
 			if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15) == 1){
 				HAL_GPIO_WritePin(emer_light_gpio, emer_light_pin, RESET);
@@ -930,11 +908,11 @@ static void MX_TIM4_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 2;
+  sConfig.IC1Filter = 3;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 2;
+  sConfig.IC2Filter = 3;
   if (HAL_TIM_Encoder_Init(&htim4, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -1171,6 +1149,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			timestamp++;
 		}
 		if(mode == HOMING){
+			// End effector position check
+			if(home.homing_command == 1 && eff.actual_status[0] == 0 && eff.actual_status[1] == 1){
+				eff.solenoid_command[0] = 0;
+				eff.solenoid_command[1] = 0;
+				eff.solenoid_command[2] = 1;
+				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
+				return;
+			}
+			if(home.homing_command == 1 && eff.actual_status[0] == 1 && eff.actual_status[1] == 0){
+				eff.solenoid_command[0] = 0;
+				eff.solenoid_command[1] = 0;
+				eff.solenoid_command[2] = 0;
+				Update_eff(&eff, solenoid_pull_gpio, solenoid_pull_pin, solenoid_push_gpio, solenoid_push_pin, vacuum_gpio, vacuum_pin);
+			}
 			// Homing state
 			homing(&home, GPIOB, GPIO_PIN_12); // Homing function
 			pwm_signal = home.pwm;
@@ -1193,9 +1185,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 //			testing = 1;
 		}
 		else if(test == 1){
-			initial_position = 500.0;
-			target_position = encoder.mm;
-			evaScurveData.t = 0;
+			initial_position = encoder.mm;
+			target_position = 0.0;
+			evaScurveData.t = 0.0;
 			setpoint_pos = 0.0;
 			setpoint_vel = 0.0;
 			test = 0;
@@ -1207,10 +1199,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_15){
 		// Emergency switch interrupted
 		if(HAL_GPIO_ReadPin(emer_gpio, emer_pin) == 0){
-			Reset_homing(&home);
-			setpoint = 0.0;
-			v_e = 0.0;
-			v_output = 0;
+//			test = 0;
+//			setpoint = 0.0;
+//			Reset_homing(&home);
+//			Reset_qei(&encoder, &htim4);
+//			Reset_pid(&p_pid);
+//			p_output = 0.0;
+//			p_e = 0.0;
+//			Reset_pid(&v_pid);
+//			v_output = 0;
+//			v_e = 0.0;
+//			initial_position = 0.0;
+//			target_position = 0.0;
+//			evaScurveData.t = 0.0;
+//
+//			state = 0;
+//			registerFrame[0x10].U16 = 0;
+//			registerFrame[0x01].U16 = 0;
+
+			Reset_main_variable();
+
 			// Stop motor
 			Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, 0);
 			// Emergency light enable
@@ -1226,20 +1234,56 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 }
 
 // Torque control update
-void Update_torque_control(float s){
+void Update_torque_control(double s){
 
 }
 // Velocity control update
-void Update_velocity_control(float s){
+void Update_velocity_control(double s){
 	// input is millimeter unit
-	v_e = s - encoder.mmps;
-	v_output = (int32_t)(Update_pid(&v_pid, v_e, 65535.0, 65535.0));
+	v_e = s - lowpass.filtered_data;
+	v_output = (int32_t)floor((Update_pid(&v_pid, v_e, 65535.0, 65535.0)));
 }
 // Position control update
-void Update_position_control(float s){
+void Update_position_control(double s){
 	//input is pulse unit
 	p_e = s - Get_mm(&encoder);
 	p_output = Update_pid(&p_pid, p_e, 650.0, 650.0);
+}
+// Reset variable function
+void Reset_main_variable(){
+	// Reset point reset
+	setpoint = 0.0;
+	// Reset PWM signal
+	pwm_signal = 0;
+	// Encoder compute enable
+	is_update_encoder = 0;
+	// Reset trajectory
+	initial_position = 0.0;
+	target_position = 0.0;
+	evaScurveData.setposition = 0.0;
+	evaScurveData.setvelocity = 0.0;
+	evaScurveData.setacceleration = 0.0;
+	evaScurveData.t = 0.0;
+	// Reset homing data
+	Reset_homing(&home);
+	// Reset state enable
+	state = 0;
+	ready = 0;
+	test = 0;
+	// Reset MODBUS
+	registerFrame[0x10].U16 = 0;
+	registerFrame[0x01].U16 = 0;
+	// Reset encoder
+	Reset_qei(&encoder, &htim4);
+	// Reset lowpass
+	Reset_lowpass(&lowpass);
+	// Reset PID
+	p_e = 0.0;
+	p_output = 0.0;
+	v_e = 0.0;
+	v_output = 0;
+	Reset_pid(&p_pid);
+	Reset_pid(&v_pid);
 }
 /* USER CODE END 4 */
 

@@ -11,8 +11,9 @@
 #include "arm_math.h"
 
 typedef struct{
-	float32_t filtered_data;
+	float filtered_data;
 } LOWPASS;
 
-void Update_lowpass(LOWPASS* lowpass, float32_t input);
+void Update_lowpass(LOWPASS* lowpass, float input);
+void Reset_lowpass(LOWPASS* lowpass);
 #endif /* INC_LOWPASS_H_ */
