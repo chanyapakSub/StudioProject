@@ -34,6 +34,7 @@
 #include "Basesystem.h"
 #include "state.h"
 #include "Scurve.h"
+#include "Trapezoidal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -172,21 +173,21 @@ LOWPASS lowpass;
 
 // Velocity pid
 PID v_pid;
-float v_kp_u = 3.1;
-float v_ki_u = 0.0001;
+float v_kp_u = 15.0;
+float v_ki_u = 3.0;
 float v_kd_u = 0.0;
-float v_kp_d = 2.2;
-float v_ki_d = 0.0002;
+float v_kp_d = 15.0;
+float v_ki_d = 3.0;
 float v_kd_d = 0.0;
 double v_e = 0.0;
 int32_t v_output = 0;
 
 // Position pid
 PID p_pid;
-float p_kp_u = 0.0;
+float p_kp_u = 0.01;
 float p_ki_u = 0.0;
 float p_kd_u = 0.0;
-float p_kp_d = 0.0;
+float p_kp_d = 0.01;
 float p_ki_d = 0.0;
 float p_kd_d = 0.0;
 double p_e = 0.0;
@@ -208,11 +209,13 @@ float x_axis_position = 0.0;
 // Trajectory
 volatile Scurve_GenStruct genScurveData;
 volatile Scurve_EvaStruct evaScurveData;
+trapezoidalGen genTrapezoidalData;
+trapezoidalCompute computeTrapezoidalData;
 double initial_position = 0.0;
 double target_position = 0.0;
 double max_velocity = 650.0;
-double max_acceleration = 800.0;
-double max_jerk = 400.0;
+double max_acceleration = 1000.0;
+double max_jerk = 3500.0;
 double setpoint_pos = 0.0;
 double setpoint_vel = 0.0;
 
@@ -400,16 +403,23 @@ int main(void)
 //					kalman_velocity = SteadyStateKalmanFilter(&kalman, ((float)pwm_signal * 24.0)/65535.0, encoder.radps / 2.0);
 //					kalman_velocity_z = kalman_velocity * 2.0 * 16.0 / (2.0 * M_PI);
 					Update_lowpass(&lowpass, encoder.mmps);
-//
+
 //					Trajectory_Generator(&genScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Generate trajectory
 //					Trajectory_Evaluated(&genScurveData, &evaScurveData, initial_position, target_position, max_velocity, max_acceleration, max_jerk); // Evaluate trajectory
+					trapezoidalGeneration(&genTrapezoidalData, initial_position, target_position, max_velocity, max_acceleration);
+					trapezoidalComputation(&computeTrapezoidalData, &genTrapezoidalData, max_velocity, max_acceleration);
+//
 //					setpoint_pos = evaScurveData.setposition; // Position set point
 //					setpoint_vel = evaScurveData.setvelocity; // Feed forward velocity
-//
-////					Update_position_control(setpoint_pos);
-//					Update_velocity_control(setpoint_vel + p_output);
-//					pwm_signal = v_output;
-//					Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, pwm_signal); // Update main PWM signal
+					setpoint_pos = computeTrapezoidalData.set_pos;
+					setpoint_vel = computeTrapezoidalData.set_vel;
+					if(start_position_control == 1){
+//						Update_position_control(setpoint_pos);
+						start_position_control = 0;
+					}
+					Update_velocity_control(setpoint_vel + p_output);
+					pwm_signal = v_output;
+					Update_pwm(&pwm_tim, pwm_channel, dir_gpio, dir_pin, pwm_signal); // Update main PWM signal
 					is_update_encoder = 0;
 				}
 				// Check command from base system status
@@ -1139,10 +1149,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		// Update encoder
 		if(is_update_encoder == 0){
 			is_update_encoder = 1;
+
 		}
 		if(mode == RUNNING){
 			static uint8_t timestamp = 0;
-			if(start_position_control == 0 && timestamp == 8){
+			if(start_position_control == 0 && timestamp == 10){
 				start_position_control = 1;
 				timestamp = 0;
 			}
@@ -1179,6 +1190,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 			target_position = 500.0;
 			initial_position = encoder.mm;
 			evaScurveData.t = 0;
+			computeTrapezoidalData.t = 0.0;
 			setpoint_pos = 0.0;
 			setpoint_vel = 0.0;
 			test = 1;
@@ -1186,8 +1198,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 		else if(test == 1){
 			initial_position = encoder.mm;
-			target_position = 0.0;
+			target_position = 10.0;
 			evaScurveData.t = 0.0;
+			computeTrapezoidalData.t = 0.0;
 			setpoint_pos = 0.0;
 			setpoint_vel = 0.0;
 			test = 0;
@@ -1240,7 +1253,8 @@ void Update_torque_control(double s){
 // Velocity control update
 void Update_velocity_control(double s){
 	// input is millimeter unit
-	v_e = s - lowpass.filtered_data;
+//	v_e = s - lowpass.filtered_data;
+	v_e = s - Get_mmps(&encoder);
 	v_output = (int32_t)floor((Update_pid(&v_pid, v_e, 65535.0, 65535.0)));
 }
 // Position control update
@@ -1264,6 +1278,9 @@ void Reset_main_variable(){
 	evaScurveData.setvelocity = 0.0;
 	evaScurveData.setacceleration = 0.0;
 	evaScurveData.t = 0.0;
+	computeTrapezoidalData.set_pos = 0.0;
+	computeTrapezoidalData.set_vel = 0.0;
+	computeTrapezoidalData.t = 0.0;
 	// Reset homing data
 	Reset_homing(&home);
 	// Reset state enable

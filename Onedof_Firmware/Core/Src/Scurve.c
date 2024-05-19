@@ -211,5 +211,10 @@ void Trajectory_Evaluated(volatile Scurve_GenStruct *genScurve,volatile Scurve_E
 			evaScurve->setacceleration = a6 + genScurve->dir *jmax * (evaScurve->t - genScurve->t6);
 		}
 	}
-	else{evaScurve->isFinised = true;}
+	else{
+		evaScurve->setposition = target_p;
+		evaScurve->setvelocity = 0.0;
+		evaScurve->setacceleration = 0.0;
+		evaScurve->isFinised = true;
+	}
 }

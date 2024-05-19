@@ -46,16 +46,19 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 			if(home -> homing_state[1] == 1){
 //				home -> state_check += 10;
 				if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_first == 1 && home -> homing_sec == 1){
-					home -> pwm = 0;
-					// Reset homing state and other
-					home -> homing_ts = 0;
-					home -> homing_state[0] = 0;
-					home -> homing_state[1] = 0;
-					home -> homing_command = 0;
-					home -> homing_first = 0;
-					home -> homing_sec = 0;
-					home -> is_home = 1;
-					return;
+					if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0){
+						// Check Proximity again
+						home -> pwm = 0;
+						// Reset homing state and other
+						home -> homing_ts = 0;
+						home -> homing_state[0] = 0;
+						home -> homing_state[1] = 0;
+						home -> homing_command = 0;
+						home -> homing_first = 0;
+						home -> homing_sec = 0;
+						home -> is_home = 1;
+						return;
+					}
 				}
 				else if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1 && home -> homing_first == 1 && home -> homing_sec == 0 && home -> homing_ts >= 1500){
 					// Stop when proximity was detected
@@ -79,15 +82,18 @@ void homing(HOME* home, GPIO_TypeDef* GPIO_Prox, uint16_t GPIO_Pin_Prox)
 			}
 			else if(home -> homing_state[1] == 2){
 				if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0 && home -> homing_first == 1 && home -> homing_sec == 1){
-					home -> pwm = 0;
-					// Reset homing state and other
-					home -> homing_ts = 0;
-					home -> homing_state[0] = 0;
-					home -> homing_state[1] = 0;
-					home -> homing_command = 0;
-					home -> homing_first = 0;
-					home -> is_home = 1;
-					return;
+					if(HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 0){
+						// Check Proximity again
+						home -> pwm = 0;
+						// Reset homing state and other
+						home -> homing_ts = 0;
+						home -> homing_state[0] = 0;
+						home -> homing_state[1] = 0;
+						home -> homing_command = 0;
+						home -> homing_first = 0;
+						home -> is_home = 1;
+						return;
+					}
 				}
 				else if((HAL_GPIO_ReadPin(GPIO_Prox, GPIO_Pin_Prox) == 1) && (home -> homing_first == 1) && (home -> homing_sec == 0)){
 					// Stop when proximity was detected

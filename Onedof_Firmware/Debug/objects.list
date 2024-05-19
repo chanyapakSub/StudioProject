@@ -2,6 +2,7 @@
 "./Core/Src/ModBusRTU.o"
 "./Core/Src/Scurve.o"
 "./Core/Src/Trajectory.o"
+"./Core/Src/Trapezoidal.o"
 "./Core/Src/adc.o"
 "./Core/Src/eff.o"
 "./Core/Src/joy.o"

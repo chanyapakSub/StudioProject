@@ -8,11 +8,12 @@
 #ifndef INC_TRAJECTORY_H_
 #define INC_TRAJECTORY_H_
 #include "main.h"
+#include "math.h"
 
 //Define
 float q_d_i = 0;
 float q_d_max = 650; //Maximum velocity
-float q_2d_max = 700; //Maximum acc
+float q_2d_max = 700; //Maximum acceleration
 //init
 float q_f = 600;
 float q_i = 600;
