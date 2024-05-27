@@ -7,6 +7,7 @@
 "./Core/Src/eff.o"
 "./Core/Src/joy.o"
 "./Core/Src/kalman.o"
+"./Core/Src/kalman_saifah.o"
 "./Core/Src/lowpass.o"
 "./Core/Src/main.o"
 "./Core/Src/pid.o"

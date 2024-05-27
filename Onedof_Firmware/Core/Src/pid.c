@@ -24,22 +24,20 @@ double Update_pid(PID *pid, double error, float pid_sat, float plant_sat) {
 	float e_n = error; // error[n]
 
 	// For upcase
-	if(e_n >= 0){
-		if(!(((pid -> y_n >= pid_sat) && e_n > 0) || ((pid -> y_n <= -(pid_sat)) && e_n < 0 ))){
-			pid -> y_n += ((pid -> kp_up + pid -> ki_up + pid -> kd_up) * e_n)
-							- ((pid -> kp_up + (2 * pid -> kd_up)) * pid -> e_n_1)
-							+ (pid -> kd_up * pid -> e_n_2);
-		}
+	if(!(((pid -> y_n >= pid_sat) && e_n > 0) || ((pid -> y_n <= -(pid_sat)) && e_n < 0 ))){
+		pid -> y_n += ((pid -> kp_up + pid -> ki_up + pid -> kd_up) * e_n)
+						- ((pid -> kp_up + (2 * pid -> kd_up)) * pid -> e_n_1)
+						+ (pid -> kd_up * pid -> e_n_2);
 	}
 	// For down case
-	else if(e_n < 0){
-		if(!(((pid -> y_n >= pid_sat) && e_n > 0) || ((pid -> y_n <= -(pid_sat)) && e_n < 0 ))){
-			pid -> y_n =	pid -> y_n_1
-							+ ((pid -> kp_down + pid -> ki_down + pid -> kd_down) * e_n)
-							- ((pid -> kp_down + (2 * pid -> kd_down)) * pid -> e_n_1)
-							+ (pid -> kd_down * pid -> e_n_2);
-		}
-	}
+//	else if(e_n < 0){
+//		if(!(((pid -> y_n >= pid_sat) && e_n > 0) || ((pid -> y_n <= -(pid_sat)) && e_n < 0 ))){
+//			pid -> y_n =	pid -> y_n_1
+//							+ ((pid -> kp_down + pid -> ki_down + pid -> kd_down) * e_n)
+//							- ((pid -> kp_down + (2 * pid -> kd_down)) * pid -> e_n_1)
+//							+ (pid -> kd_down * pid -> e_n_2);
+//		}
+//	}
 
 	if(pid -> y_n >= pid_sat){
 		pid -> y_n = pid_sat;

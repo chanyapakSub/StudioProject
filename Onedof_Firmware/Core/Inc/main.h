@@ -84,7 +84,6 @@ void Error_Handler(void);
 #define Proximity_GPIO_Port GPIOB
 #define Emergency_switch_Pin GPIO_PIN_15
 #define Emergency_switch_GPIO_Port GPIOB
-#define Emergency_switch_EXTI_IRQn EXTI15_10_IRQn
 #define Set_home_Pin GPIO_PIN_6
 #define Set_home_GPIO_Port GPIOC
 #define Reed_switch_pull_Pin GPIO_PIN_7

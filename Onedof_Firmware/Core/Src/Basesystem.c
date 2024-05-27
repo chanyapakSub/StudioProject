@@ -83,32 +83,25 @@ uint16_t Set_Shelves(){
 }
 
 // wait for Data type check
-uint16_t Set_Goal_Point(){
-	return registerFrame[0x30].U16;
+float Set_Goal_Point(){
+	return (float)registerFrame[0x30].U16 / 10.0;
 }
 
 uint16_t Run_Point_Mode(){
 	if (registerFrame[0x01].U16 == 8){
 		registerFrame[0x01].U16 = 0;
-		registerFrame[0x10].U16 = 16;
-		state = registerFrame[0x10].U16;
 		return 1;
 	}else{return 0;}
 }
 
 void Set_Home(){
-	if(registerFrame[0x10].U16 == 2){
+	if(registerFrame[0x01].U16 == 2){
 		state = 2;
 		strcpy(Home, "Homing...");
 	}
 	else{
 		return;
 	}
-//	if (Jogginghome == 1){
-//		registerFrame[0x01].U16 = 0;
-//	}
-
-
 }
 void SetPick_PlaceOrder() {
     if (registerFrame[0x21].U16 != 00000 && registerFrame[0x22].U16 != 00000 ) {
@@ -157,24 +150,12 @@ void SetPick_PlaceOrder() {
 
 
 uint16_t Run_Jog_Mode() {
-	if (registerFrame[0x01].U16 == 1) {
+	if (registerFrame[0x01].U16 == 4) {
 		strcpy(Jogmode, "Run Jog Mode");
 		registerFrame[0x01].U16 = 0;
 		return 1;
-//		for (int i = 0; i < 5; i++) {
-//			state = 4;
-//			strcpy(Jogmode, "Go to Pick...");
-//			registerFrame[0x10].U16 = 4;
-//			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
-//
-//			state = 8;
-//			strcpy(Jogmode, "Go to Place...");
-//			registerFrame[0x10].U16 = 8;
-//			SetPick_PlaceOrder(); //แก้ให้เข้ากับซัน
-//		}
 	}
 	else{return 0;}
-//	registerFrame[0x10].U16 = 0;
 }
 
 #endif /* SRC_BASESYSTEM_C_ */
