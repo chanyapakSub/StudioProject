@@ -11,12 +11,14 @@
 #include "math.h"
 
 typedef struct{
+	uint64_t m_t0, m_t1, m_t2, m_t3, m_t_time;
 	double t0, t1, t2, t3, t_acc, total_time;
 	int8_t dir;
 	double initial_position, final_position;
 } trapezoidalGen;
 
 typedef struct{
+	uint64_t m_t;
 	double t;
 	uint8_t is_finish;
 	double set_vel, set_pos;

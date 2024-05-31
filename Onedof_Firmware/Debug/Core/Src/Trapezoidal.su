@@ -1,2 +1,2 @@
 ../Core/Src/Trapezoidal.c:9:6:trapezoidalGeneration	96	static
-../Core/Src/Trapezoidal.c:82:6:trapezoidalComputation	48	static
+../Core/Src/Trapezoidal.c:113:6:trapezoidalComputation	48	static
